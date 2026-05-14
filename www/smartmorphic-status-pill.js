@@ -141,15 +141,17 @@ if (customElements.get("smartmorphic-status-pill")) {
 }
 console.info("[smartmorphic-status-pill] post-define get:", customElements.get("smartmorphic-status-pill") ? "REGISTERED" : "NOT FOUND");
 
-// Workaround for scoped-custom-element-registry polyfill: a stale whenDefined
-// promise can stay pending if `whenDefined` was called before our `define`.
-// Force the polyfill to re-scan + resolve any pending promises.
-try {
-  if (typeof customElements.upgrade === "function") {
-    customElements.upgrade(document);
-  }
-} catch (e) {
-  console.warn("[smartmorphic-status-pill] upgrade nudge failed:", e);
+if (!window.__smartmorphicUpgradeScheduled) {
+  window.__smartmorphicUpgradeScheduled = true;
+  setTimeout(() => {
+    try {
+      if (typeof customElements.upgrade === "function") {
+        customElements.upgrade(document);
+      }
+    } catch (e) {
+      console.warn("[smartmorphic] document upgrade failed:", e);
+    }
+  }, 0);
 }
 
 // =============================================================================
@@ -491,7 +493,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.4.2 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.4.3 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
