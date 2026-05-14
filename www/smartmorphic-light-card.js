@@ -204,8 +204,8 @@ class SmartmorphicLightCard extends HTMLElement {
       .card.on .icon-well {
         background: var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.35),
-          inset 0 -1px 2px rgba(0,0,0,0.18),
+          inset 0 2px 0 rgba(255,255,255,0.40),
+          inset 0 -2px 3px rgba(0,0,0,0.25),
           0 0 0 1px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
         color: var(--smartmorphic-accent, #e8653a);
       }
@@ -452,7 +452,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.4.1 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.4.2 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
