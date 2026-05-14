@@ -18,4 +18,5 @@ Build Lit web components for the highest-traffic surfaces, consuming the `--smar
 
 ## Tooling / packaging
 
+- [ ] **Visual editors for custom cards** — implement `getConfigElement()` on each card so the Lovelace UI editor renders proper form fields (entity pickers, etc.) instead of falling back to raw YAML. Use `<ha-form>` with a schema; share a base editor class across cards.
 - [ ] **HACS-installable** — register the repo as a HACS frontend integration so users can install via the store instead of `git clone`.
