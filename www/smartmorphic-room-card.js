@@ -40,10 +40,10 @@ class SmartmorphicRoomCard extends HTMLElement {
 
   setConfig(config) {
     if (!config.name) throw new Error("smartmorphic-room-card: 'name' is required");
-    if (!Array.isArray(config.entities) || config.entities.length === 0) {
-      throw new Error("smartmorphic-room-card: 'entities' must be a non-empty list");
-    }
-    this._config = config;
+    this._config = {
+      ...config,
+      entities: Array.isArray(config.entities) ? config.entities : [],
+    };
     this._rendered = false;
   }
 
@@ -84,10 +84,10 @@ class SmartmorphicRoomCard extends HTMLElement {
   }
 
   _secondaryText() {
-    const active = this._activeCount();
     const total = this._config.entities.length;
     const temp = this._temperatureText();
-    const counts = `${active} of ${total} active`;
+    if (total === 0) return temp ?? "";
+    const counts = `${this._activeCount()} of ${total} active`;
     return temp ? `${temp} · ${counts}` : counts;
   }
 
@@ -242,7 +242,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.1.0 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.1.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
