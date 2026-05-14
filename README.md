@@ -10,10 +10,12 @@ Ships:
   CSS injection for card internals.
 - `www/smartmorphic-fonts.js` — runtime loader for DM Sans, Outfit, and
   JetBrains Mono.
-- `www/smartmorphic-room-card.js` — custom Lovelace card: neumorphic room
-  tile with active-state ember and ambient temp.
+- `www/smartmorphic-room-card.js` — custom card: neumorphic room tile.
+- `www/smartmorphic-light-card.js` — custom card: light tile, tap toggles,
+  hold expands to brightness + color-temp sliders.
+- `www/smartmorphic-status-pill.js` — custom card: semantic status chip.
 - `dashboards/smartmorphic-starter.yaml` — template Lovelace dashboard
-  using Mushroom cards plus the Smartmorphic room card.
+  using the Smartmorphic cards.
 
 ## Prerequisites
 
@@ -27,8 +29,9 @@ the starter dashboard is built on.
 
 ## Install
 
-Clone into your HA config dir and symlink the two assets into the places
-HA expects them:
+Clone into your HA config dir. HA OS's `/local` mount has been flaky with
+symlinks for some users — if symlinks 404 in the browser, swap to plain
+copies (see *Troubleshooting*).
 
 ```bash
 cd /config
@@ -36,9 +39,9 @@ git clone https://github.com/robotpants/smartmorphic-ha
 ln -sf /config/smartmorphic-ha/themes/smartmorphic.yaml /config/themes/smartmorphic.yaml
 ln -sf /config/smartmorphic-ha/www/smartmorphic-fonts.js /config/www/smartmorphic-fonts.js
 ln -sf /config/smartmorphic-ha/www/smartmorphic-room-card.js /config/www/smartmorphic-room-card.js
+ln -sf /config/smartmorphic-ha/www/smartmorphic-light-card.js /config/www/smartmorphic-light-card.js
+ln -sf /config/smartmorphic-ha/www/smartmorphic-status-pill.js /config/www/smartmorphic-status-pill.js
 ```
-
-This is the recommended path — `git pull` is then the only update step.
 
 Add to `configuration.yaml`:
 
@@ -48,6 +51,8 @@ frontend:
   extra_module_url:
     - /local/smartmorphic-fonts.js
     - /local/smartmorphic-room-card.js
+    - /local/smartmorphic-light-card.js
+    - /local/smartmorphic-status-pill.js
 ```
 
 Restart Home Assistant (Developer Tools → YAML → Restart, or full reboot).
@@ -64,13 +69,26 @@ cd /config/smartmorphic-ha && git pull
 ```
 
 Then Developer Tools → YAML → **Reload Themes** (no restart needed for
-theme-only changes; restart if `smartmorphic-fonts.js` changed).
+theme-only changes; restart if any `www/*.js` files changed).
 
 ## Troubleshooting
 
 - **Theme doesn't appear in the picker.** Confirm
   `/config/themes/smartmorphic.yaml` resolves (`ls -lL /config/themes/`).
   Reload themes from Developer Tools → YAML.
+- **Custom cards 404 in browser console, even though the symlinks resolve.**
+  HA OS occasionally refuses to serve symlinked files under `/local`.
+  Replace the symlinks with copies:
+
+  ```bash
+  rm -f /config/www/smartmorphic-*.js
+  cp /config/smartmorphic-ha/www/smartmorphic-fonts.js /config/www/
+  cp /config/smartmorphic-ha/www/smartmorphic-room-card.js /config/www/
+  cp /config/smartmorphic-ha/www/smartmorphic-light-card.js /config/www/
+  cp /config/smartmorphic-ha/www/smartmorphic-status-pill.js /config/www/
+  ```
+
+  Tradeoff: re-run the `cp` after every `git pull`.
 - **Fonts fall back to system default.** Hard-refresh the browser
   (Cmd-Shift-R / Ctrl-Shift-R). Check the network tab for the Google
   Fonts CSS request. If you're offline or block Google Fonts, see
@@ -116,6 +134,8 @@ smartmorphic-ha/
 │   ├── smartmorphic-fonts.js
 │   ├── smartmorphic-fonts-local.js
 │   ├── smartmorphic-room-card.js
+│   ├── smartmorphic-light-card.js
+│   ├── smartmorphic-status-pill.js
 │   └── fonts/
 │       ├── DMSans-VariableFont_opsz_wght.ttf
 │       ├── DMSans-Italic-VariableFont_opsz_wght.ttf
@@ -129,9 +149,8 @@ smartmorphic-ha/
 
 ### Room card
 
-Use in place of a Mushroom template card for room tiles on the main
-dashboard. Watches a list of entities to surface an "active" ember and
-counts how many are on.
+Neumorphic room tile. Watches entities for active-state, surfaces ambient
+temp, navigates to a detail view on tap.
 
 ```yaml
 - type: custom:smartmorphic-room-card
@@ -145,8 +164,6 @@ counts how many are on.
   navigate: /smartmorphic/living-room
 ```
 
-Options:
-
 | Key | Required | Description |
 |---|---|---|
 | `name` | yes | Display name. |
@@ -155,9 +172,60 @@ Options:
 | `temperature` | no | Sensor entity to display in the secondary line. |
 | `navigate` | no | Path to navigate to on tap. |
 
+### Light card
+
+Replaces HA's tile for a light. **Tap** toggles. **Hold** (500ms) expands
+the card to reveal brightness and color-temperature sliders inline (no
+modal). Color temp row hides itself if the light doesn't support it.
+
+```yaml
+- type: custom:smartmorphic-light-card
+  entity: light.living_room
+  name: Living Room        # optional, defaults to friendly_name
+  icon: mdi:floor-lamp     # optional, defaults to entity icon
+```
+
+| Key | Required | Description |
+|---|---|---|
+| `entity` | yes | A `light.*` entity. |
+| `name` | no | Override display name. |
+| `icon` | no | Override icon. |
+
+### Status pill
+
+Semantic chip in one of four variants (`ok` / `warning` / `alert` /
+`info`). Static or entity-bound.
+
+Static:
+
+```yaml
+- type: custom:smartmorphic-status-pill
+  variant: ok
+  label: All locked
+  icon: mdi:lock-check
+```
+
+Entity-bound — pick a variant/label/icon per state:
+
+```yaml
+- type: custom:smartmorphic-status-pill
+  entity: binary_sensor.front_door
+  states:
+    "on":  { variant: alert, label: Door open,   icon: mdi:door-open }
+    "off": { variant: ok,    label: Door closed, icon: mdi:door }
+  fallback: { variant: info, label: Unknown }
+```
+
+| Key | Required | Description |
+|---|---|---|
+| `variant` | one of `variant` / `entity` is required | `ok` / `warning` / `alert` / `info`. |
+| `label` | no | Pill text (static mode). |
+| `icon` | no | MDI icon name (static mode); defaults per variant. |
+| `entity` | one of `variant` / `entity` is required | Entity whose state drives the pill. |
+| `states` | no | Map of state value → `{ variant, label, icon }`. |
+| `fallback` | no | Used when state isn't in `states`. |
+
 ## Phase 2
 
-More custom Lovelace cards in progress: light card, scene chip, status
-pill, plus a redesigned more-info dialog and Energy dashboard restyle.
-They'll consume the `--smartmorphic-*` CSS variables already exposed by
-the theme. See `TODO.md`.
+Remaining: more-info dialog redesign, Energy dashboard restyle, visual
+editors for the custom cards. See `TODO.md`.

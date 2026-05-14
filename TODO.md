@@ -5,9 +5,10 @@
 Build Lit web components for the highest-traffic surfaces, consuming the `--smartmorphic-*` CSS variables already defined in the theme.
 
 - [x] **Room card** — room name, accessory count, ambient temp, ember dot when active. Tap → room detail view.
-- [ ] **Light card** — replace HA's default light tile. Expandable for brightness + color temp + color, matches the iOS app's light-card pattern.
+- [x] **Light card** — replace HA's default light tile. Tap toggles, hold expands to brightness + color-temp sliders. Full color picker still TODO.
+- [ ] **Light card: color picker** — RGB / HS / XY color picking for lights that support it. Deferred from v1.
 - [ ] **Scene chip** — pill that recedes when active. Lives in a horizontal scroll.
-- [ ] **Status pill** — semantic chip (`ok` / `warning` / `alert` / `info`) with 18% background + darkened semantic text.
+- [x] **Status pill** — semantic chip (`ok` / `warning` / `alert` / `info`) with 18% background + darkened semantic text. Static + entity-bound modes.
 - [ ] **More-info dialog redesign** — replace HA's default expanded entity sheet.
 
 ## Polish backlog (theme-only, no custom cards required)

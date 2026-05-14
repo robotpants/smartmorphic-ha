@@ -77,19 +77,26 @@ views:
       - type: grid
         title: Status
         cards:
-          - type: tile
+          - type: custom:smartmorphic-status-pill
             entity: lock.REPLACE_ME_front_door
-            name: Front Door
-          - type: tile
+            states:
+              "locked":   { variant: ok,    label: Front locked,   icon: mdi:lock }
+              "unlocked": { variant: alert, label: Front unlocked, icon: mdi:lock-open-variant }
+            fallback: { variant: info, label: Front door, icon: mdi:door }
+          - type: custom:smartmorphic-status-pill
             entity: alarm_control_panel.REPLACE_ME_alarm
-            name: Alarm
-          - type: tile
+            states:
+              "armed_home":  { variant: ok,    label: Armed home, icon: mdi:shield-home }
+              "armed_away":  { variant: ok,    label: Armed away, icon: mdi:shield-lock }
+              "disarmed":    { variant: info,  label: Disarmed,   icon: mdi:shield-off-outline }
+              "triggered":   { variant: alert, label: Triggered,  icon: mdi:shield-alert }
+            fallback: { variant: warning, label: Alarm }
+          - type: custom:smartmorphic-status-pill
             entity: cover.REPLACE_ME_garage
-            name: Garage
-          - type: tile
-            entity: sensor.REPLACE_ME_indoor_temp
-            name: Indoor
-            color: accent
+            states:
+              "closed": { variant: ok,      label: Garage closed, icon: mdi:garage }
+              "open":   { variant: warning, label: Garage open,   icon: mdi:garage-open }
+            fallback: { variant: info, label: Garage }
 
       - type: grid
         title: Rooms
@@ -141,14 +148,10 @@ views:
       - type: grid
         title: Lights
         cards:
-          - type: tile
+          - type: custom:smartmorphic-light-card
             entity: light.REPLACE_ME_living_room
-            features:
-              - type: light-brightness
-          - type: tile
+          - type: custom:smartmorphic-light-card
             entity: light.REPLACE_ME_living_room_lamp
-            features:
-              - type: light-brightness
 
       - type: grid
         title: Climate
