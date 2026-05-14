@@ -21,80 +21,55 @@
 
 // =============================================================================
 // Canonical register helper — installs on window so all cards share it.
-// Fixes the picker-spinner regression: HA's card factory awaits
-// customElements.whenDefined(tag). The scoped-custom-element-registry
-// polyfill (loaded by Mushroom and others via HACS) keeps those promises
-// pending if whenDefined() was called BEFORE our define() ran. The picker
-// then sits forever even though customElements.get() returns the class.
 //
-// Strategy (multiple paths, any one resolves the stuck promise):
-//   1. Probe-and-attach: create an instance, mount under <body> for 200ms,
-//      then remove. Triggers the polyfill's upgrade-driven resolution.
-//   2. customElements.upgrade(document) — forces a registry walk.
-//   3. Direct internal-map resolve: try several known polyfill internal
-//      property names where pending whenDefined deferreds live, and
-//      manually resolve them with our class.
-//   4. Repeat at 0ms / 500ms / 1500ms to catch picker dialogs that open
-//      late in their own scoped registry.
+// THE problem (diagnosed via live console state):
+//   1. Our scripts load via extra_module_url and call customElements.define().
+//   2. At that moment, customElements is the NATIVE CustomElementRegistry —
+//      our class registers there fine.
+//   3. Mushroom HACS loads AFTER us and brings the
+//      scoped-custom-element-registry polyfill, which REPLACES
+//      window.customElements with its own fresh, empty registry.
+//   4. Polyfill does NOT adopt definitions that existed on the native registry.
+//   5. HA's create-element-base uses the new (polyfilled) customElements and
+//      sees no smartmorphic-* tags → "Custom element not found".
+//
+// Fix: poll customElements.get(tag) and re-define if missing. Idempotent —
+// each call either succeeds, or no-ops if our class is already registered
+// in the current registry. Stops polling after 30s.
 // =============================================================================
 if (!window.smartmorphicDefineCard) {
   window.smartmorphicDefineCard = function (tag, ctor) {
-    if (customElements.get(tag)) return;
-    try {
-      customElements.define(tag, ctor);
-    } catch (e) {
-      console.error("[" + tag + "] define threw:", e);
-      return;
-    }
-    const nudge = () => {
+    const tryRegister = () => {
+      const existing = customElements.get(tag);
+      if (existing === ctor) return true;
+      if (existing) {
+        // Another class already claims this tag — leave it alone.
+        return true;
+      }
       try {
-        // (3) Direct resolve of polyfill's pending whenDefined deferreds.
-        // Different polyfill versions use different internal property names.
-        const reg = customElements;
-        const candidates = [
-          "_whenDefinedDeferreds",
-          "__whenDefinedDeferreds",
-          "_whenDefinedPromises",
-          "whenDefinedDeferreds",
-          "_pendingPromises",
-        ];
-        for (const key of candidates) {
-          const map = reg[key];
-          if (map && typeof map.get === "function" && map.has(tag)) {
-            const entry = map.get(tag);
-            const resolveFn =
-              entry && (entry.resolve || (entry.deferred && entry.deferred.resolve));
-            if (typeof resolveFn === "function") {
-              resolveFn(reg.get(tag));
-            }
-          }
-        }
-        // (1) Probe-and-attach.
-        if (document.body) {
-          const el = document.createElement(tag);
-          el.style.cssText =
-            "display:none !important;position:absolute;visibility:hidden;pointer-events:none;left:-9999px;top:-9999px;";
-          document.body.appendChild(el);
-          setTimeout(() => {
-            try {
-              el.remove();
-            } catch (_) {}
-          }, 200);
-        }
-        // (2) Walk document upgrading.
-        if (typeof customElements.upgrade === "function") {
-          customElements.upgrade(document);
-        }
+        customElements.define(tag, ctor);
+        return true;
       } catch (_) {
-        // best-effort
+        return false;
       }
     };
-    if (document.body) nudge();
-    else document.addEventListener("DOMContentLoaded", nudge, { once: true });
-    // (4) Repeat to catch picker dialogs that open in late-bound scoped registries.
-    setTimeout(nudge, 500);
-    setTimeout(nudge, 1500);
+    tryRegister();
     console.info("[" + tag + "] registered");
+    // Re-register if the registry gets replaced (e.g. by Mushroom's polyfill
+    // loading after us). Cheap poll, stops after 30s.
+    let elapsed = 0;
+    const interval = setInterval(() => {
+      elapsed += 500;
+      if (customElements.get(tag) !== ctor) {
+        if (!customElements.get(tag)) {
+          try {
+            customElements.define(tag, ctor);
+            console.info("[" + tag + "] re-registered (registry swap detected)");
+          } catch (_) {}
+        }
+      }
+      if (elapsed >= 30000) clearInterval(interval);
+    }, 500);
   };
 }
 
@@ -379,7 +354,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.5.1 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.5.2 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
