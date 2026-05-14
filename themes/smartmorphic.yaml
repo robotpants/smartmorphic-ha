@@ -485,8 +485,8 @@ Smartmorphic:
       ha-card-border-width:  "0"
       ha-card-border-color:  "transparent"
       ha-card-box-shadow: >-
-        4px 4px 12px rgba(0,0,0,0.55),
-        -3px -3px 10px rgba(255,255,255,0.08)
+        3px 3px 8px rgba(0,0,0,0.55),
+        -1.5px -1.5px 4px rgba(255,255,255,0.05)
       ha-card-header-color:        "#e4e5eb"
       ha-card-header-font-family:  "DM Sans, system-ui, -apple-system, sans-serif"
       ha-card-header-font-weight:  "600"
@@ -623,20 +623,20 @@ Smartmorphic:
       # ---- Neumorphic shadow recipes (dark — near-imperceptible
       # highlight, deep black low-side; depth lives in the dark side)
       smartmorphic-neu-raised: >-
-        4px 4px 12px rgba(0,0,0,0.55),
-        -3px -3px 10px rgba(255,255,255,0.08)
+        3px 3px 8px rgba(0,0,0,0.55),
+        -1.5px -1.5px 4px rgba(255,255,255,0.05)
       smartmorphic-neu-raised-sm: >-
-        3px 3px 8px rgba(0,0,0,0.50),
-        -2px -2px 6px rgba(255,255,255,0.06)
+        2px 2px 5px rgba(0,0,0,0.50),
+        -1px -1px 3px rgba(255,255,255,0.04)
       smartmorphic-neu-raised-lg: >-
-        7px 7px 20px rgba(0,0,0,0.60),
-        -4px -4px 14px rgba(255,255,255,0.10)
+        5px 5px 14px rgba(0,0,0,0.60),
+        -2px -2px 8px rgba(255,255,255,0.06)
       smartmorphic-neu-pressed: >-
-        inset 2px 2px 6px rgba(0,0,0,0.60),
-        inset -1.5px -1.5px 4px rgba(255,255,255,0.08)
+        inset 2px 2px 4px rgba(0,0,0,0.60),
+        inset -1px -1px 2px rgba(255,255,255,0.05)
       smartmorphic-neu-pressed-sm: >-
-        inset 1.5px 1.5px 4px rgba(0,0,0,0.55),
-        inset -1px -1px 3px rgba(255,255,255,0.06)
+        inset 1.5px 1.5px 3px rgba(0,0,0,0.55),
+        inset -1px -1px 2px rgba(255,255,255,0.04)
 
       # ---- Off-state tint ----
       smartmorphic-off-tint: "rgba(125,128,146,0.10)"
