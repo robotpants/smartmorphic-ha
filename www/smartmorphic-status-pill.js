@@ -89,10 +89,10 @@ class SmartmorphicStatusPill extends HTMLElement {
       .pill {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
+        gap: var(--smartmorphic-space-3, 8px);
+        padding: var(--smartmorphic-space-3, 8px) var(--smartmorphic-space-4, 14px);
         border-radius: var(--smartmorphic-radius-pill, 999px);
-        font-family: 'DM Sans', var(--primary-font-family, sans-serif);
+        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-weight: 600;
         font-size: 0.85rem;
         line-height: 1;
@@ -463,7 +463,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.3.0 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.4.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
