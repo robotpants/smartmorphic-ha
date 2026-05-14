@@ -130,7 +130,16 @@ class SmartmorphicStatusPill extends HTMLElement {
   }
 }
 
-customElements.define("smartmorphic-status-pill", SmartmorphicStatusPill);
+if (customElements.get("smartmorphic-status-pill")) {
+  console.warn("[smartmorphic-status-pill] already registered, skipping re-define");
+} else {
+  try {
+    customElements.define("smartmorphic-status-pill", SmartmorphicStatusPill);
+  } catch (e) {
+    console.error("[smartmorphic-status-pill] define threw:", e);
+  }
+}
+console.info("[smartmorphic-status-pill] post-define get:", customElements.get("smartmorphic-status-pill") ? "REGISTERED" : "NOT FOUND");
 
 // =============================================================================
 // Visual editor — supports both static and entity-bound modes.
@@ -452,7 +461,15 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
   }
 }
 
-customElements.define("smartmorphic-status-pill-editor", SmartmorphicStatusPillEditor);
+if (customElements.get("smartmorphic-status-pill-editor")) {
+  console.warn("[smartmorphic-status-pill-editor] already registered, skipping re-define");
+} else {
+  try {
+    customElements.define("smartmorphic-status-pill-editor", SmartmorphicStatusPillEditor);
+  } catch (e) {
+    console.error("[smartmorphic-status-pill-editor] define threw:", e);
+  }
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -463,7 +480,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.4.0 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.4.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
