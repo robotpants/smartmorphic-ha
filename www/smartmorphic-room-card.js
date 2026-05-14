@@ -19,6 +19,42 @@
 // Style aligned to design_handoff_smartmorphic_theme (see style-guide branch).
 // =============================================================================
 
+// =============================================================================
+// Canonical register helper — installs on window so all cards share it.
+// Fixes the picker-spinner regression: HA's card factory uses
+// customElements.whenDefined(tag), but scoped-custom-element-registry
+// (loaded by Mushroom and others via HACS) keeps those promises pending
+// until an instance of the element is upgraded via DOM connection.
+// Briefly appending a probe element triggers the upgrade and resolves
+// the promise so the picker stops spinning.
+// =============================================================================
+if (!window.smartmorphicDefineCard) {
+  window.smartmorphicDefineCard = function (tag, ctor) {
+    if (customElements.get(tag)) return;
+    try {
+      customElements.define(tag, ctor);
+    } catch (e) {
+      console.error("[" + tag + "] define threw:", e);
+      return;
+    }
+    const probe = () => {
+      try {
+        if (!document.body) return;
+        const el = document.createElement(tag);
+        el.style.cssText =
+          "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
+        document.body.appendChild(el);
+        Promise.resolve().then(() => el.remove());
+      } catch (_) {
+        // best-effort
+      }
+    };
+    if (document.body) probe();
+    else document.addEventListener("DOMContentLoaded", probe, { once: true });
+    console.info("[" + tag + "] registered");
+  };
+}
+
 const ACTIVE_STATES = new Set(["on", "open", "playing", "home", "heat", "cool", "auto"]);
 
 const isActive = (stateObj) => {
@@ -236,29 +272,7 @@ class SmartmorphicRoomCard extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-room-card")) {
-  console.warn("[smartmorphic-room-card] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-room-card", SmartmorphicRoomCard);
-  } catch (e) {
-    console.error("[smartmorphic-room-card] define threw:", e);
-  }
-}
-console.info("[smartmorphic-room-card] post-define get:", customElements.get("smartmorphic-room-card") ? "REGISTERED" : "NOT FOUND");
-
-if (!window.__smartmorphicUpgradeScheduled) {
-  window.__smartmorphicUpgradeScheduled = true;
-  setTimeout(() => {
-    try {
-      if (typeof customElements.upgrade === "function") {
-        customElements.upgrade(document);
-      }
-    } catch (e) {
-      console.warn("[smartmorphic] document upgrade failed:", e);
-    }
-  }, 0);
-}
+window.smartmorphicDefineCard("smartmorphic-room-card", SmartmorphicRoomCard);
 
 // =============================================================================
 // Visual editor
@@ -312,16 +326,7 @@ class SmartmorphicRoomCardEditor extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-room-card-editor")) {
-  console.warn("[smartmorphic-room-card-editor] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-room-card-editor", SmartmorphicRoomCardEditor);
-  } catch (e) {
-    console.error("[smartmorphic-room-card-editor] define threw:", e);
-  }
-}
-
+window.smartmorphicDefineCard("smartmorphic-room-card-editor", SmartmorphicRoomCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-room-card",
@@ -331,7 +336,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.4.3 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.5.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
