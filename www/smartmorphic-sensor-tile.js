@@ -23,6 +23,42 @@
 //   show_sparkline: true              # optional (default true)
 // =============================================================================
 
+// =============================================================================
+// Canonical register helper — installs on window so all cards share it.
+// Fixes the picker-spinner regression: HA's card factory uses
+// customElements.whenDefined(tag), but scoped-custom-element-registry
+// (loaded by Mushroom and others via HACS) keeps those promises pending
+// until an instance of the element is upgraded via DOM connection.
+// Briefly appending a probe element triggers the upgrade and resolves
+// the promise so the picker stops spinning.
+// =============================================================================
+if (!window.smartmorphicDefineCard) {
+  window.smartmorphicDefineCard = function (tag, ctor) {
+    if (customElements.get(tag)) return;
+    try {
+      customElements.define(tag, ctor);
+    } catch (e) {
+      console.error("[" + tag + "] define threw:", e);
+      return;
+    }
+    const probe = () => {
+      try {
+        if (!document.body) return;
+        const el = document.createElement(tag);
+        el.style.cssText =
+          "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
+        document.body.appendChild(el);
+        Promise.resolve().then(() => el.remove());
+      } catch (_) {
+        // best-effort
+      }
+    };
+    if (document.body) probe();
+    else document.addEventListener("DOMContentLoaded", probe, { once: true });
+    console.info("[" + tag + "] registered");
+  };
+}
+
 const DEGREE_PATTERN = /^°[CF]?$|^°$/;
 
 const isDegreeUnit = (unit) => {
@@ -239,32 +275,7 @@ class SmartmorphicSensorTile extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-sensor-tile")) {
-  console.warn("[smartmorphic-sensor-tile] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-sensor-tile", SmartmorphicSensorTile);
-  } catch (e) {
-    console.error("[smartmorphic-sensor-tile] define threw:", e);
-  }
-}
-console.info(
-  "[smartmorphic-sensor-tile] post-define get:",
-  customElements.get("smartmorphic-sensor-tile") ? "REGISTERED" : "NOT FOUND"
-);
-
-if (!window.__smartmorphicUpgradeScheduled) {
-  window.__smartmorphicUpgradeScheduled = true;
-  setTimeout(() => {
-    try {
-      if (typeof customElements.upgrade === "function") {
-        customElements.upgrade(document);
-      }
-    } catch (e) {
-      console.warn("[smartmorphic] document upgrade failed:", e);
-    }
-  }, 0);
-}
+window.smartmorphicDefineCard("smartmorphic-sensor-tile", SmartmorphicSensorTile);
 
 // =============================================================================
 // Visual editor
@@ -318,21 +329,7 @@ class SmartmorphicSensorTileEditor extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-sensor-tile-editor")) {
-  console.warn(
-    "[smartmorphic-sensor-tile-editor] already registered, skipping re-define"
-  );
-} else {
-  try {
-    customElements.define(
-      "smartmorphic-sensor-tile-editor",
-      SmartmorphicSensorTileEditor
-    );
-  } catch (e) {
-    console.error("[smartmorphic-sensor-tile-editor] define threw:", e);
-  }
-}
-
+window.smartmorphicDefineCard("smartmorphic-sensor-tile-editor", SmartmorphicSensorTileEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-sensor-tile",
@@ -343,7 +340,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-SENSOR-TILE %c v0.1.0 ",
+  "%c SMARTMORPHIC-SENSOR-TILE %c v0.1.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
