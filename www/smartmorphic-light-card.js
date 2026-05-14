@@ -27,11 +27,10 @@ class SmartmorphicLightCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config.entity) throw new Error("smartmorphic-light-card: 'entity' is required");
-    if (!config.entity.startsWith("light.")) {
+    if (config.entity && !config.entity.startsWith("light.")) {
       throw new Error("smartmorphic-light-card: 'entity' must be a light");
     }
-    this._config = { ...config };
+    this._config = { ...config, entity: config.entity ?? "" };
     this._rendered = false;
   }
 
@@ -49,8 +48,9 @@ class SmartmorphicLightCard extends HTMLElement {
     return this._expanded ? 4 : 2;
   }
 
-  static getStubConfig() {
-    return { entity: "" };
+  static getStubConfig(hass) {
+    const lights = hass ? Object.keys(hass.states ?? {}).filter((e) => e.startsWith("light.")) : [];
+    return { entity: lights[0] ?? "" };
   }
 
   _stateObj() {
@@ -95,6 +95,7 @@ class SmartmorphicLightCard extends HTMLElement {
   }
 
   _secondaryText() {
+    if (!this._config.entity) return "No entity";
     if (!this._stateObj()) return "Unavailable";
     if (!this._isOn()) return "Off";
     const pct = this._brightnessPct();
@@ -165,8 +166,8 @@ class SmartmorphicLightCard extends HTMLElement {
         background: var(--smartmorphic-surface, var(--ha-card-background, var(--card-background-color)));
         border-radius: var(--smartmorphic-radius, 18px);
         box-shadow: var(--smartmorphic-neu-raised,
-          8px 8px 16px rgba(0,0,0,0.12),
-          -8px -8px 16px rgba(255,255,255,0.7));
+          6px 6px 14px rgba(0,0,0,0.22),
+          -6px -6px 14px rgba(255,255,255,0.05));
         padding: 16px;
         transition: box-shadow 180ms ease;
         user-select: none;
@@ -187,8 +188,8 @@ class SmartmorphicLightCard extends HTMLElement {
         display: grid;
         place-items: center;
         box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0,0,0,0.12),
-          inset -3px -3px 6px rgba(255,255,255,0.7));
+          inset 3px 3px 6px rgba(0,0,0,0.25),
+          inset -3px -3px 6px rgba(255,255,255,0.06));
         color: var(--primary-text-color);
         transition: color 180ms ease;
       }
@@ -235,15 +236,15 @@ class SmartmorphicLightCard extends HTMLElement {
       input[type="range"]::-webkit-slider-runnable-track {
         height: 14px; border-radius: 999px;
         box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0,0,0,0.12),
-          inset -3px -3px 6px rgba(255,255,255,0.7));
+          inset 3px 3px 6px rgba(0,0,0,0.25),
+          inset -3px -3px 6px rgba(255,255,255,0.06));
         background: var(--smartmorphic-surface, var(--ha-card-background));
       }
       input[type="range"]::-moz-range-track {
         height: 14px; border-radius: 999px;
         box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0,0,0,0.12),
-          inset -3px -3px 6px rgba(255,255,255,0.7));
+          inset 3px 3px 6px rgba(0,0,0,0.25),
+          inset -3px -3px 6px rgba(255,255,255,0.06));
         background: var(--smartmorphic-surface, var(--ha-card-background));
       }
       input[type="range"]::-webkit-slider-thumb {
@@ -350,7 +351,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.1.0 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.1.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
