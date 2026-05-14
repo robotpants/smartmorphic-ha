@@ -10,8 +10,10 @@ Ships:
   CSS injection for card internals.
 - `www/smartmorphic-fonts.js` — runtime loader for DM Sans, Outfit, and
   JetBrains Mono.
+- `www/smartmorphic-room-card.js` — custom Lovelace card: neumorphic room
+  tile with active-state ember and ambient temp.
 - `dashboards/smartmorphic-starter.yaml` — template Lovelace dashboard
-  using Mushroom cards.
+  using Mushroom cards plus the Smartmorphic room card.
 
 ## Prerequisites
 
@@ -33,6 +35,7 @@ cd /config
 git clone https://github.com/robotpants/smartmorphic-ha
 ln -sf /config/smartmorphic-ha/themes/smartmorphic.yaml /config/themes/smartmorphic.yaml
 ln -sf /config/smartmorphic-ha/www/smartmorphic-fonts.js /config/www/smartmorphic-fonts.js
+ln -sf /config/smartmorphic-ha/www/smartmorphic-room-card.js /config/www/smartmorphic-room-card.js
 ```
 
 This is the recommended path — `git pull` is then the only update step.
@@ -44,6 +47,7 @@ frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
     - /local/smartmorphic-fonts.js
+    - /local/smartmorphic-room-card.js
 ```
 
 Restart Home Assistant (Developer Tools → YAML → Restart, or full reboot).
@@ -111,6 +115,7 @@ smartmorphic-ha/
 ├── www/
 │   ├── smartmorphic-fonts.js
 │   ├── smartmorphic-fonts-local.js
+│   ├── smartmorphic-room-card.js
 │   └── fonts/
 │       ├── DMSans-VariableFont_opsz_wght.ttf
 │       ├── DMSans-Italic-VariableFont_opsz_wght.ttf
@@ -120,9 +125,39 @@ smartmorphic-ha/
     └── smartmorphic-starter.yaml
 ```
 
+## Custom cards
+
+### Room card
+
+Use in place of a Mushroom template card for room tiles on the main
+dashboard. Watches a list of entities to surface an "active" ember and
+counts how many are on.
+
+```yaml
+- type: custom:smartmorphic-room-card
+  name: Living Room
+  icon: mdi:sofa
+  entities:
+    - light.living_room
+    - light.living_room_lamp
+    - media_player.living_room
+  temperature: sensor.living_room_temp
+  navigate: /smartmorphic/living-room
+```
+
+Options:
+
+| Key | Required | Description |
+|---|---|---|
+| `name` | yes | Display name. |
+| `icon` | no | MDI icon name. Defaults to `mdi:home`. |
+| `entities` | yes | List of entity IDs watched for active-state. Ember lights when any are on/playing/open. |
+| `temperature` | no | Sensor entity to display in the secondary line. |
+| `navigate` | no | Path to navigate to on tap. |
+
 ## Phase 2
 
-Custom Lovelace cards (Lit web components) for room card, light card,
-scene chip, status pill, plus a redesigned more-info dialog and Energy
-dashboard restyle. They'll consume the `--smartmorphic-*` CSS variables
-already exposed by the theme. See `TODO.md`.
+More custom Lovelace cards in progress: light card, scene chip, status
+pill, plus a redesigned more-info dialog and Energy dashboard restyle.
+They'll consume the `--smartmorphic-*` CSS variables already exposed by
+the theme. See `TODO.md`.

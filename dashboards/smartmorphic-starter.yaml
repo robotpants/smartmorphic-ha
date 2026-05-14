@@ -94,45 +94,39 @@ views:
       - type: grid
         title: Rooms
         cards:
-          - type: custom:mushroom-template-card
-            primary: Living Room
-            secondary: "{{ states('sensor.REPLACE_ME_living_room_temp') }}° · {{ states('light.REPLACE_ME_living_room') }}"
+          - type: custom:smartmorphic-room-card
+            name: Living Room
             icon: mdi:sofa
-            icon_color: |
-              {% if is_state('light.REPLACE_ME_living_room', 'on') %}orange{% else %}grey{% endif %}
-            tap_action:
-              action: navigate
-              navigation_path: /smartmorphic/living-room
+            entities:
+              - light.REPLACE_ME_living_room
+              - light.REPLACE_ME_living_room_lamp
+              - media_player.REPLACE_ME_living_room
+            temperature: sensor.REPLACE_ME_living_room_temp
+            navigate: /smartmorphic/living-room
 
-          - type: custom:mushroom-template-card
-            primary: Kitchen
-            secondary: "{{ states('sensor.REPLACE_ME_kitchen_temp') }}° · {{ states('light.REPLACE_ME_kitchen') }}"
+          - type: custom:smartmorphic-room-card
+            name: Kitchen
             icon: mdi:silverware-fork-knife
-            icon_color: |
-              {% if is_state('light.REPLACE_ME_kitchen', 'on') %}orange{% else %}grey{% endif %}
-            tap_action:
-              action: navigate
-              navigation_path: /smartmorphic/kitchen
+            entities:
+              - light.REPLACE_ME_kitchen
+            temperature: sensor.REPLACE_ME_kitchen_temp
+            navigate: /smartmorphic/kitchen
 
-          - type: custom:mushroom-template-card
-            primary: Bedroom
-            secondary: "{{ states('sensor.REPLACE_ME_bedroom_temp') }}° · {{ states('light.REPLACE_ME_bedroom') }}"
+          - type: custom:smartmorphic-room-card
+            name: Bedroom
             icon: mdi:bed
-            icon_color: |
-              {% if is_state('light.REPLACE_ME_bedroom', 'on') %}orange{% else %}grey{% endif %}
-            tap_action:
-              action: navigate
-              navigation_path: /smartmorphic/bedroom
+            entities:
+              - light.REPLACE_ME_bedroom
+            temperature: sensor.REPLACE_ME_bedroom_temp
+            navigate: /smartmorphic/bedroom
 
-          - type: custom:mushroom-template-card
-            primary: Office
-            secondary: "{{ states('sensor.REPLACE_ME_office_temp') }}° · {{ states('light.REPLACE_ME_office') }}"
+          - type: custom:smartmorphic-room-card
+            name: Office
             icon: mdi:desk
-            icon_color: |
-              {% if is_state('light.REPLACE_ME_office', 'on') %}orange{% else %}grey{% endif %}
-            tap_action:
-              action: navigate
-              navigation_path: /smartmorphic/office
+            entities:
+              - light.REPLACE_ME_office
+            temperature: sensor.REPLACE_ME_office_temp
+            navigate: /smartmorphic/office
 
   # ---------------------------------------------------------------------------
   # Per-room detail view (template — duplicate per room, change entity IDs
