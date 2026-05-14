@@ -16,12 +16,21 @@
 
 // =============================================================================
 // Canonical register helper — installs on window so all cards share it.
-// Fixes the picker-spinner regression: HA's card factory uses
-// customElements.whenDefined(tag), but scoped-custom-element-registry
-// (loaded by Mushroom and others via HACS) keeps those promises pending
-// until an instance of the element is upgraded via DOM connection.
-// Briefly appending a probe element triggers the upgrade and resolves
-// the promise so the picker stops spinning.
+// Fixes the picker-spinner regression: HA's card factory awaits
+// customElements.whenDefined(tag). The scoped-custom-element-registry
+// polyfill (loaded by Mushroom and others via HACS) keeps those promises
+// pending if whenDefined() was called BEFORE our define() ran. The picker
+// then sits forever even though customElements.get() returns the class.
+//
+// Strategy (multiple paths, any one resolves the stuck promise):
+//   1. Probe-and-attach: create an instance, mount under <body> for 200ms,
+//      then remove. Triggers the polyfill's upgrade-driven resolution.
+//   2. customElements.upgrade(document) — forces a registry walk.
+//   3. Direct internal-map resolve: try several known polyfill internal
+//      property names where pending whenDefined deferreds live, and
+//      manually resolve them with our class.
+//   4. Repeat at 0ms / 500ms / 1500ms to catch picker dialogs that open
+//      late in their own scoped registry.
 // =============================================================================
 if (!window.smartmorphicDefineCard) {
   window.smartmorphicDefineCard = function (tag, ctor) {
@@ -32,20 +41,54 @@ if (!window.smartmorphicDefineCard) {
       console.error("[" + tag + "] define threw:", e);
       return;
     }
-    const probe = () => {
+    const nudge = () => {
       try {
-        if (!document.body) return;
-        const el = document.createElement(tag);
-        el.style.cssText =
-          "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
-        document.body.appendChild(el);
-        Promise.resolve().then(() => el.remove());
+        // (3) Direct resolve of polyfill's pending whenDefined deferreds.
+        // Different polyfill versions use different internal property names.
+        const reg = customElements;
+        const candidates = [
+          "_whenDefinedDeferreds",
+          "__whenDefinedDeferreds",
+          "_whenDefinedPromises",
+          "whenDefinedDeferreds",
+          "_pendingPromises",
+        ];
+        for (const key of candidates) {
+          const map = reg[key];
+          if (map && typeof map.get === "function" && map.has(tag)) {
+            const entry = map.get(tag);
+            const resolveFn =
+              entry && (entry.resolve || (entry.deferred && entry.deferred.resolve));
+            if (typeof resolveFn === "function") {
+              resolveFn(reg.get(tag));
+            }
+          }
+        }
+        // (1) Probe-and-attach.
+        if (document.body) {
+          const el = document.createElement(tag);
+          el.style.cssText =
+            "display:none !important;position:absolute;visibility:hidden;pointer-events:none;left:-9999px;top:-9999px;";
+          document.body.appendChild(el);
+          setTimeout(() => {
+            try {
+              el.remove();
+            } catch (_) {}
+          }, 200);
+        }
+        // (2) Walk document upgrading.
+        if (typeof customElements.upgrade === "function") {
+          customElements.upgrade(document);
+        }
       } catch (_) {
         // best-effort
       }
     };
-    if (document.body) probe();
-    else document.addEventListener("DOMContentLoaded", probe, { once: true });
+    if (document.body) nudge();
+    else document.addEventListener("DOMContentLoaded", nudge, { once: true });
+    // (4) Repeat to catch picker dialogs that open in late-bound scoped registries.
+    setTimeout(nudge, 500);
+    setTimeout(nudge, 1500);
     console.info("[" + tag + "] registered");
   };
 }
@@ -457,7 +500,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.5.0 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.5.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
