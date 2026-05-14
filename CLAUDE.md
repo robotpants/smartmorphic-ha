@@ -28,27 +28,19 @@ When building or editing custom Lovelace cards in `www/`:
 - **Register via `window.smartmorphicDefineCard(tag, ctor)`, never bare `customElements.define`.** Each card file must inline-install the helper at the top:
 
   ```js
-  if (!window.smartmorphicDefineCard) {
-    window.smartmorphicDefineCard = function (tag, ctor) {
-      if (customElements.get(tag)) return;
-      try { customElements.define(tag, ctor); }
-      catch (e) { console.error("[" + tag + "] define threw:", e); return; }
-      const probe = () => {
-        try {
-          if (!document.body) return;
-          const el = document.createElement(tag);
-          el.style.cssText = "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
-          document.body.appendChild(el);
-          Promise.resolve().then(() => el.remove());
-        } catch (_) {}
-      };
-      if (document.body) probe(); else document.addEventListener("DOMContentLoaded", probe, { once: true });
-      console.info("[" + tag + "] registered");
-    };
-  }
+  // See www/smartmorphic-room-card.js for the canonical implementation —
+  // copy it verbatim into every new card file. Helper does:
+  //   1. customElements.define(tag, ctor)
+  //   2. attempt to resolve any pending whenDefined() deferreds via the
+  //      polyfill's internal map (multiple property-name guesses)
+  //   3. attach a probe instance under <body> for 200ms to trigger the
+  //      upgrade-driven resolution path
+  //   4. customElements.upgrade(document)
+  //   5. repeat steps 2-4 at 0ms / 500ms / 1500ms to catch picker dialogs
+  //      opening in late-bound scoped registries
   ```
 
-  Why: `scoped-custom-element-registry` (loaded by Mushroom HACS) keeps `customElements.whenDefined()` promises pending until an instance of the tag is upgraded via DOM connection. HA's card-picker uses `whenDefined()` — without the probe, the picker spins forever even though `customElements.get()` returns the class. The helper attaches a hidden probe element briefly to trigger the upgrade lifecycle, then removes it. Apply the helper to BOTH the card class and its editor class. Do not also call `customElements.upgrade(document)` in a setTimeout — the per-card probe replaces that earlier workaround.
+  Why: `scoped-custom-element-registry` (loaded by Mushroom HACS) keeps `customElements.whenDefined()` promises pending if `whenDefined()` was called BEFORE our `define()` ran (e.g. HA frontend pre-warmed the lookup at boot). HA's card-picker awaits that stuck promise. A simple probe-and-remove isn't enough — the polyfill needs multiple resolve paths and a probe lifetime long enough for the upgrade callback to settle. Apply the helper to BOTH the card class and its editor class.
 
 ## Visual style direction
 
