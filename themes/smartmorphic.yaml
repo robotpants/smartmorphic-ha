@@ -203,6 +203,42 @@ Smartmorphic:
       smartmorphic-color-pink: "#e84a7a"
       smartmorphic-color-teal: "#3abfb8"
 
+      # ---- Type tokens (consumed by cards instead of inline 'DM Sans', etc.) ----
+      smartmorphic-font-body: "'DM Sans', system-ui, -apple-system, sans-serif"
+      smartmorphic-font-display: "'Outfit', system-ui, -apple-system, sans-serif"
+      smartmorphic-font-mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
+
+      # ---- Eyebrow text (the small-caps secondary labels — SETPOINT AVG etc.) ----
+      smartmorphic-eyebrow-font-family: "'DM Sans', system-ui, -apple-system, sans-serif"
+      smartmorphic-eyebrow-font-size: "0.72rem"
+      smartmorphic-eyebrow-font-weight: "600"
+      smartmorphic-eyebrow-letter-spacing: "0.08em"
+      smartmorphic-eyebrow-text-transform: "uppercase"
+      smartmorphic-eyebrow-color: "#6b6e7d"
+
+      # ---- Spacing scale ----
+      smartmorphic-space-1: "4px"
+      smartmorphic-space-2: "6px"
+      smartmorphic-space-3: "8px"
+      smartmorphic-space-4: "12px"
+      smartmorphic-space-5: "16px"
+      smartmorphic-space-6: "24px"
+
+      # ---- Motion ----
+      smartmorphic-transition-fast: "120ms ease"
+      smartmorphic-transition-base: "180ms ease"
+      smartmorphic-transition-slow: "240ms ease"
+      smartmorphic-ease-spring: "cubic-bezier(0.25,0.46,0.45,0.94)"
+      smartmorphic-transition-spring: "0.25s cubic-bezier(0.25,0.46,0.45,0.94)"
+
+      # ---- Chart palette (single-line + multi-line history charts) ----
+      smartmorphic-chart-color-1: "#e8653a"
+      smartmorphic-chart-color-2: "#3a8ee8"
+      smartmorphic-chart-color-3: "#3abf7a"
+      smartmorphic-chart-color-4: "#e84a7a"
+      smartmorphic-chart-color-5: "#9b59b6"
+      smartmorphic-chart-color-6: "#e8b83a"
+
       # =========================================================================
       # Mushroom card overrides
       # https://github.com/piitaya/lovelace-mushroom
@@ -541,6 +577,42 @@ Smartmorphic:
       smartmorphic-color-purple: "#9b59b6"
       smartmorphic-color-pink: "#e84a7a"
       smartmorphic-color-teal: "#3abfb8"
+
+      # ---- Type tokens ----
+      smartmorphic-font-body: "'DM Sans', system-ui, -apple-system, sans-serif"
+      smartmorphic-font-display: "'Outfit', system-ui, -apple-system, sans-serif"
+      smartmorphic-font-mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
+
+      # ---- Eyebrow text ----
+      smartmorphic-eyebrow-font-family: "'DM Sans', system-ui, -apple-system, sans-serif"
+      smartmorphic-eyebrow-font-size: "0.72rem"
+      smartmorphic-eyebrow-font-weight: "600"
+      smartmorphic-eyebrow-letter-spacing: "0.08em"
+      smartmorphic-eyebrow-text-transform: "uppercase"
+      smartmorphic-eyebrow-color: "#9a9caa"
+
+      # ---- Spacing scale ----
+      smartmorphic-space-1: "4px"
+      smartmorphic-space-2: "6px"
+      smartmorphic-space-3: "8px"
+      smartmorphic-space-4: "12px"
+      smartmorphic-space-5: "16px"
+      smartmorphic-space-6: "24px"
+
+      # ---- Motion ----
+      smartmorphic-transition-fast: "120ms ease"
+      smartmorphic-transition-base: "180ms ease"
+      smartmorphic-transition-slow: "240ms ease"
+      smartmorphic-ease-spring: "cubic-bezier(0.25,0.46,0.45,0.94)"
+      smartmorphic-transition-spring: "0.25s cubic-bezier(0.25,0.46,0.45,0.94)"
+
+      # ---- Chart palette ----
+      smartmorphic-chart-color-1: "#e8653a"
+      smartmorphic-chart-color-2: "#3a8ee8"
+      smartmorphic-chart-color-3: "#3abf7a"
+      smartmorphic-chart-color-4: "#e84a7a"
+      smartmorphic-chart-color-5: "#9b59b6"
+      smartmorphic-chart-color-6: "#e8b83a"
 
       # ---- Mushroom overrides ----
       mush-rgb-card: "43, 45, 55"
