@@ -69,6 +69,10 @@ class SmartmorphicRoomCard extends HTMLElement {
     };
   }
 
+  static getConfigElement() {
+    return document.createElement("smartmorphic-room-card-editor");
+  }
+
   _activeCount() {
     if (!this._hass || !this._config) return 0;
     return this._config.entities.filter((eid) => isActive(this._hass.states[eid])).length;
@@ -233,6 +237,60 @@ class SmartmorphicRoomCard extends HTMLElement {
 
 customElements.define("smartmorphic-room-card", SmartmorphicRoomCard);
 
+// =============================================================================
+// Visual editor
+// =============================================================================
+const ROOM_EDITOR_LABELS = {
+  name: "Room name",
+  icon: "Icon",
+  entities: "Entities to watch (active when any is on/playing/open)",
+  temperature: "Temperature sensor (optional)",
+  navigate: "Tap navigates to (optional, e.g. /smartmorphic/living-room)",
+};
+
+const ROOM_EDITOR_SCHEMA = [
+  { name: "name", required: true, selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+  { name: "entities", selector: { entity: { multiple: true } } },
+  { name: "temperature", selector: { entity: { filter: { device_class: "temperature" } } } },
+  { name: "navigate", selector: { text: {} } },
+];
+
+class SmartmorphicRoomCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...config };
+    this._ensureForm();
+    this._form.data = this._config;
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) this._form.hass = hass;
+  }
+
+  _ensureForm() {
+    if (this._form) return;
+    this._form = document.createElement("ha-form");
+    this._form.schema = ROOM_EDITOR_SCHEMA;
+    this._form.computeLabel = (s) => ROOM_EDITOR_LABELS[s.name] ?? s.name;
+    this._form.addEventListener("value-changed", (e) => this._valueChanged(e));
+    if (this._hass) this._form.hass = this._hass;
+    this.appendChild(this._form);
+  }
+
+  _valueChanged(e) {
+    const next = { ...this._config, ...e.detail.value };
+    this._config = next;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: next },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+}
+
+customElements.define("smartmorphic-room-card-editor", SmartmorphicRoomCardEditor);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-room-card",
@@ -242,7 +300,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.1.2 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.2.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
