@@ -1,0 +1,206 @@
+/* @import MUST be first — browsers ignore @imports placed after other rules. */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ============================================
+   SMARTMORPHIC — Colors & Type Tokens
+   Neumorphic smart-home interface system
+   ============================================ */
+
+/* DM Sans — local brand font (variable, upright + italic) */
+@font-face {
+  font-family: 'DM Sans';
+  src: url('fonts/DMSans-VariableFont_opsz_wght.ttf') format('truetype-variations'),
+       url('fonts/DMSans-VariableFont_opsz_wght.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('fonts/DMSans-Italic-VariableFont_opsz_wght.ttf') format('truetype-variations'),
+       url('fonts/DMSans-Italic-VariableFont_opsz_wght.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* JetBrains Mono — local brand font (variable, upright + italic) */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/JetBrainsMono-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/JetBrainsMono-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/JetBrainsMono-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('fonts/JetBrainsMono-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* === Surfaces (Light) === */
+  --bg:           #e2e4ec;   /* Page background — single soft surface */
+  --surface:      #e2e4ec;   /* Card surface (same as bg — neumorphic) */
+
+  /* === Text === */
+  --text-primary:   #2c2e3a; /* Headings, primary copy */
+  --text-secondary: #6b6e7d; /* Sub-copy, status text */
+  --text-muted:     #7d8092; /* Eyebrow labels, muted UI */
+
+  /* === Accent (Ember) === */
+  --accent:       #e8653a;
+  --accent-glow:  rgba(232, 101, 58, 0.35);
+
+  /* === Semantic === */
+  --success:      #3abf7a;
+  --warning:      #e8b83a;
+  --danger:       #e84a3a;
+
+  /* === Color Presets (device color picker) === */
+  --color-ember:  #e8653a;
+  --color-blue:   #3a8ee8;
+  --color-purple: #9b59b6;
+  --color-green:  #3abf7a;
+  --color-amber:  #e8b83a;
+  --color-pink:   #e84a7a;
+  --color-teal:   #3abfb8;
+  --color-white:  #f5f0e8;
+
+  /* === Neumorphic Shadows (Light) === */
+  --shadow-light:        rgba(255, 255, 255, 0.72);
+  --shadow-dark:         rgba(163, 167, 185, 0.55);
+  --shadow-inset-light:  rgba(255, 255, 255, 0.50);
+  --shadow-inset-dark:   rgba(163, 167, 185, 0.40);
+
+  /* Shadow recipes */
+  --neu-raised:   6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+  --neu-pressed:  inset 3px 3px 6px var(--shadow-inset-dark), inset -3px -3px 6px var(--shadow-inset-light);
+  --neu-raised-sm: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  --neu-raised-lg: 10px 10px 24px var(--shadow-dark), -10px -10px 24px var(--shadow-light);
+
+  /* === Radii === */
+  --radius:    18px;  /* Default card */
+  --radius-sm: 12px;  /* Inputs, small chips */
+  --radius-lg: 24px;  /* Modal, hero tiles */
+  --radius-pill: 999px;
+
+  /* === Spacing === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 14px;
+  --space-5: 18px;
+  --space-6: 24px;
+  --space-7: 32px;
+
+  /* === Layout === */
+  --nav-height: 72px;
+  --max-app-w:  480px;
+
+  /* === Type Family === */
+  --font-sans:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* === Type Scale (semantic) === */
+  --h1-size: 24px;  --h1-weight: 600;  --h1-tracking: -0.3px;
+  --h2-size: 20px;  --h2-weight: 600;
+  --h3-size: 15px;  --h3-weight: 600;
+  --body-size: 14px; --body-weight: 400; --body-line: 1.5;
+  --sub-size: 13px;  --sub-weight: 400;  /* secondary text */
+  --caption-size: 11px; --caption-weight: 500;
+  --eyebrow-size: 11px; --eyebrow-weight: 600; --eyebrow-tracking: 1.5px;
+  --stat-size: 22px; --stat-weight: 500;     /* big numbers, Outfit */
+
+  /* === Motion === */
+  --ease-out:      cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring:   cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast:      0.15s;
+  --dur-base:      0.30s;
+  --dur-slow:      0.50s;
+}
+
+/* ============================================
+   DARK MODE — same palette, deeper shadows,
+   surfaces slightly lighter than bg
+   ============================================ */
+[data-theme="dark"], :root[data-theme="dark"] {
+  --bg:           #1a1b22;
+  --surface:      #2b2d37;
+
+  --text-primary:   #e4e5eb;
+  --text-secondary: #9a9caa;
+  --text-muted:     #5e6070;
+
+  --shadow-light:        rgba(70, 73, 88, 0.45);
+  --shadow-dark:         rgba(5, 5, 8, 0.90);
+  --shadow-inset-light:  rgba(70, 73, 88, 0.30);
+  --shadow-inset-dark:   rgba(5, 5, 8, 0.70);
+
+  --neu-raised:   10px 10px 24px rgba(0,0,0,.7), -6px -6px 16px rgba(60,63,78,.25);
+  --neu-pressed:  inset 4px 4px 8px rgba(0,0,0,.6), inset -4px -4px 8px rgba(60,63,78,.15);
+  --neu-raised-sm: 6px 6px 14px rgba(0,0,0,.7), -4px -4px 10px rgba(60,63,78,.2);
+
+  --surface-gradient: linear-gradient(145deg, #32343f, #272930);
+}
+
+/* ============================================
+   Base reset + element defaults
+   ============================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--body-size);
+  line-height: var(--body-line);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); }
+
+h1 { font-size: var(--h1-size); font-weight: var(--h1-weight); letter-spacing: var(--h1-tracking); }
+h2 { font-size: var(--h2-size); font-weight: var(--h2-weight); }
+h3 { font-size: var(--h3-size); font-weight: var(--h3-weight); font-family: var(--font-sans); }
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--eyebrow-size);
+  font-weight: var(--eyebrow-weight);
+  letter-spacing: var(--eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: var(--stat-size);
+  font-weight: var(--stat-weight);
+}
+
+/* ============================================
+   Utility primitives
+   ============================================ */
+.neu-raised {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--neu-raised);
+  border: 1px solid transparent;
+}
+[data-theme="dark"] .neu-raised {
+  background: var(--surface-gradient);
+  border-color: rgba(255,255,255,.07);
+}
+
+.neu-pressed {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--neu-pressed);
+}

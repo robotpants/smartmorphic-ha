@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Smartmorphic — Home Assistant theme</title>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<style>
+  html, body { background: #d8dae3; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; }
+  .dc-canvas { background: #d8dae3 !important; }
+  body[data-theme="dark"] { background: #0d0e13; }
+  body[data-theme="dark"] .dc-canvas { background: #0d0e13 !important; }
+
+  /* ── HA theme overrides ───────────────────────────────────────────────
+     The base Smartmorphic shadows are tuned for an app at 480px with
+     generous gaps between cards. Dense Lovelace grids need tighter, less
+     spready shadows or they create dark "blobs" where shadows pool. */
+  :root {
+    --neu-raised:    3px 3px 8px  rgba(163,167,185,0.40), -3px -3px 8px  rgba(255,255,255,0.85);
+    --neu-raised-sm: 2px 2px 5px  rgba(163,167,185,0.35), -2px -2px 5px  rgba(255,255,255,0.75);
+    --neu-raised-lg: 5px 5px 14px rgba(163,167,185,0.42), -5px -5px 14px rgba(255,255,255,0.85);
+    --neu-pressed:   inset 2px 2px 4px rgba(163,167,185,0.40), inset -2px -2px 4px rgba(255,255,255,0.70);
+  }
+  :root[data-theme="dark"], body[data-theme="dark"] {
+    --bg:       #14151b;
+    --surface:  #1d1f27;
+    --shadow-light:       rgba(70,73,88,0.18);
+    --shadow-dark:        rgba(0,0,0,0.45);
+    --shadow-inset-light: rgba(70,73,88,0.16);
+    --shadow-inset-dark:  rgba(0,0,0,0.55);
+    --neu-raised:    3px 3px 8px  rgba(0,0,0,0.50), -1.5px -1.5px 5px rgba(255,255,255,0.025);
+    --neu-raised-sm: 2px 2px 5px  rgba(0,0,0,0.45), -1px -1px 3px   rgba(255,255,255,0.025);
+    --neu-raised-lg: 5px 5px 14px rgba(0,0,0,0.55), -2px -2px 9px   rgba(255,255,255,0.03);
+    --neu-pressed:   inset 1.5px 1.5px 4px rgba(0,0,0,0.55), inset -1px -1px 3px rgba(255,255,255,0.035);
+    --surface-gradient: linear-gradient(145deg, #21232c, #1a1c23);
+  }
+
+  /* Give scroll containers breathing room so card shadows don't clip at
+     the edges. The class is applied via the view wrappers below. */
+  .ha-scroll {
+    padding: 12px 14px 16px;
+    box-sizing: border-box;
+  }
+
+  /* Browser-window chrome (kept local so we don't depend on starter timing) */
+  .bw {
+    width: 100%; height: 100%; border-radius: 18px; overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column;
+  }
+  .bw-bar {
+    height: 38px; flex: 0 0 38px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.01));
+    display: flex; align-items: center; gap: 8px; padding: 0 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  body[data-theme="dark"] .bw-bar { border-color: rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent); }
+  .bw-dot { width: 12px; height: 12px; border-radius: 999px; background: rgba(0,0,0,0.18); }
+  body[data-theme="dark"] .bw-dot { background: rgba(255,255,255,0.18); }
+  .bw-url {
+    flex: 1; margin: 0 12px; height: 22px; border-radius: 6px;
+    background: rgba(0,0,0,0.05);
+    display: flex; align-items: center; padding: 0 10px;
+    font: 11px/1 'JetBrains Mono', monospace; color: var(--text-muted);
+  }
+  body[data-theme="dark"] .bw-url { background: rgba(255,255,255,0.05); }
+  .bw-body { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" data-presets="react" src="home-assistant/ha-bundle.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "theme": "dark",
+      "accent": "ember",
+      "density": "comfortable",
+      "showSparkline": true
+    }/*EDITMODE-END*/;
+
+    const ACCENTS = {
+      ember:  { val: '#e8653a', glow: 'rgba(232,101,58,0.35)', name: 'Ember' },
+      azure:  { val: '#3a8ee8', glow: 'rgba(58,142,232,0.35)', name: 'Azure' },
+      forest: { val: '#3abf7a', glow: 'rgba(58,191,122,0.35)', name: 'Forest' },
+      plum:   { val: '#9b59b6', glow: 'rgba(155,89,182,0.35)', name: 'Plum'   },
+    };
+
+    function applyTheme(theme, accentKey) {
+      const root = document.documentElement;
+      root.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
+      document.body.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
+      const a = ACCENTS[accentKey] || ACCENTS.ember;
+      root.style.setProperty('--accent', a.val);
+      root.style.setProperty('--accent-glow', a.glow);
+    }
+
+    function App() {
+      const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      React.useEffect(() => { applyTheme(tweaks.theme, tweaks.accent); }, [tweaks.theme, tweaks.accent]);
+
+      const ctx = { density: tweaks.density, showSparkline: tweaks.showSparkline };
+
+      return (
+        <>
+          <DesignCanvas>
+            <DCSection id="overview" title="01 · Overview" subtitle="Home dashboard — three compositions of the same data.">
+              <DCArtboard id="ov-airy"   label="A · Airy default"   width={1480} height={920}>
+                <HAWindow title="Home"><OverviewView ctx={ctx} variant="airy"/></HAWindow>
+              </DCArtboard>
+              <DCArtboard id="ov-dense"  label="B · Dense grid"     width={1480} height={920}>
+                <HAWindow title="Home"><OverviewView ctx={{...ctx, density: 'dense'}} variant="dense"/></HAWindow>
+              </DCArtboard>
+              <DCArtboard id="ov-hero"   label="C · Hero climate"   width={1480} height={920}>
+                <HAWindow title="Home"><OverviewView ctx={ctx} variant="hero"/></HAWindow>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="climate" title="02 · Climate" subtitle="Per-zone thermostats with history sparklines and outdoor weather.">
+              <DCArtboard id="cl"  label="Climate dashboard" width={1480} height={920}>
+                <HAWindow title="Climate" view="climate"><ClimateView ctx={ctx}/></HAWindow>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="energy" title="03 · Energy" subtitle="Signature HA Energy view — Sankey flow + 24h history.">
+              <DCArtboard id="en"  label="Energy dashboard" width={1480} height={920}>
+                <HAWindow title="Energy" view="energy"><EnergyView ctx={ctx}/></HAWindow>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="security" title="04 · Security" subtitle="Cameras, locks, contact sensors, alarm panel.">
+              <DCArtboard id="se"  label="Security dashboard" width={1480} height={920}>
+                <HAWindow title="Security" view="security"><SecurityView ctx={ctx}/></HAWindow>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="automations" title="05 · Automations" subtitle="Automation list with last-triggered, blueprint sources, run-now.">
+              <DCArtboard id="au" label="Automations list" width={1480} height={920}>
+                <HAWindow title="Automations" view="automations"><AutomationsView ctx={ctx}/></HAWindow>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="lights" title="07 · Light controls" subtitle="HA more-info dialog for a light entity — RGB wheel, white color temperature, and combined phone view.">
+              <DCArtboard id="lc-rgb"   label="A · RGB color wheel"          width={560} height={780}>
+                <LightControlRGB/>
+              </DCArtboard>
+              <DCArtboard id="lc-white" label="B · White color temperature"  width={560} height={780}>
+                <LightControlWhite/>
+              </DCArtboard>
+              <DCArtboard id="lc-phone" label="C · Phone — full picker"      width={420} height={900}>
+                <LightControlPhone/>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="mobile" title="08 · Mobile companion" subtitle="Same dashboards on the HA Companion app — phone width.">
+              <DCArtboard id="mb" label="Phone — Overview" width={420} height={900}>
+                <PhoneShell><MobileOverview ctx={ctx}/></PhoneShell>
+              </DCArtboard>
+              <DCArtboard id="mb2" label="Phone — Climate detail" width={420} height={900}>
+                <PhoneShell><MobileClimate ctx={ctx}/></PhoneShell>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel title="Theme tweaks">
+            <TweakSection label="Surface">
+              <TweakRadio  label="Theme"   value={tweaks.theme}   options={['light', 'dark']}              onChange={v => setTweak('theme', v)}/>
+              <TweakRadio  label="Density" value={tweaks.density} options={['comfortable', 'dense']}       onChange={v => setTweak('density', v)}/>
+            </TweakSection>
+            <TweakSection label="Accent">
+              <TweakColor  label="Accent"  value={tweaks.accent}
+                options={['ember', 'azure', 'forest', 'plum']}
+                onChange={v => setTweak('accent', v)}/>
+            </TweakSection>
+            <TweakSection label="Data">
+              <TweakToggle label="Sparklines on tiles" value={tweaks.showSparkline} onChange={v => setTweak('showSparkline', v)}/>
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

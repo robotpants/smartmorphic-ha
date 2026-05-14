@@ -1,0 +1,205 @@
+# Smartmorphic theme for Home Assistant
+# Drop into /config/themes/smartmorphic.yaml and restart frontend.
+# Companion docs: ../tokens.md (full mapping rationale)
+
+Smartmorphic:
+  # ─── Modes ─────────────────────────────────────────────────────────────
+  modes:
+    light:
+      # Surfaces
+      primary-background-color:   "#e2e4ec"
+      secondary-background-color: "#e2e4ec"
+      card-background-color:      "#e2e4ec"
+      ha-card-background:         "var(--card-background-color)"
+      lovelace-background:        "var(--primary-background-color)"
+
+      # Text
+      primary-text-color:    "#2c2e3a"
+      secondary-text-color:  "#6b6e7d"
+      disabled-text-color:   "#7d8092"
+      text-primary-color:    "#ffffff"      # text ON accent surfaces
+
+      # Shadow tokens (referenced below)
+      sm-shadow-light:        "rgba(255,255,255,0.85)"
+      sm-shadow-dark:         "rgba(163,167,185,0.40)"
+      sm-shadow-light-sm:     "rgba(255,255,255,0.75)"
+      sm-shadow-dark-sm:      "rgba(163,167,185,0.35)"
+      sm-shadow-light-lg:     "rgba(255,255,255,0.85)"
+      sm-shadow-dark-lg:      "rgba(163,167,185,0.42)"
+      sm-shadow-inset-light:  "rgba(255,255,255,0.70)"
+      sm-shadow-inset-dark:   "rgba(163,167,185,0.40)"
+
+    dark:
+      # Surfaces — surface lifts above bg in dark
+      primary-background-color:   "#14151b"
+      secondary-background-color: "#1d1f27"
+      card-background-color:      "#1d1f27"
+      ha-card-background:         "var(--card-background-color)"
+      lovelace-background:        "var(--primary-background-color)"
+
+      # Text
+      primary-text-color:    "#e4e5eb"
+      secondary-text-color:  "#9a9caa"
+      disabled-text-color:   "#5e6070"
+      text-primary-color:    "#ffffff"
+
+      # Shadow tokens — much tighter in dark
+      sm-shadow-light:        "rgba(255,255,255,0.025)"
+      sm-shadow-dark:         "rgba(0,0,0,0.50)"
+      sm-shadow-light-sm:     "rgba(255,255,255,0.025)"
+      sm-shadow-dark-sm:      "rgba(0,0,0,0.45)"
+      sm-shadow-light-lg:     "rgba(255,255,255,0.03)"
+      sm-shadow-dark-lg:      "rgba(0,0,0,0.55)"
+      sm-shadow-inset-light:  "rgba(255,255,255,0.035)"
+      sm-shadow-inset-dark:   "rgba(0,0,0,0.55)"
+
+  # ─── Accent (Ember — canonical) ────────────────────────────────────────
+  primary-color: "#e8653a"
+  accent-color:  "#e8653a"
+  sm-accent:     "#e8653a"
+  sm-accent-glow: "rgba(232,101,58,0.35)"
+
+  # State / status colors
+  state-icon-color:          "var(--secondary-text-color)"
+  state-icon-active-color:   "var(--sm-accent)"
+  paper-item-icon-color:     "var(--secondary-text-color)"
+  paper-item-icon-active-color: "var(--sm-accent)"
+
+  state-on-color:       "#3abf7a"
+  state-active-color:   "#3abf7a"
+  state-warning:        "#e8b83a"
+  state-error-color:    "#e84a3a"
+  error-color:          "#e84a3a"
+  warning-color:        "#e8b83a"
+  success-color:        "#3abf7a"
+  info-color:           "#3a8ee8"
+
+  # ─── Shadow recipes (composed from tokens above) ───────────────────────
+  # Tighter offsets/blur than the original Smartmorphic CSS recipe so
+  # adjacent cards in Lovelace grids don't bleed into each other.
+  sm-neu-raised:    >-
+    3px 3px 8px var(--sm-shadow-dark),
+    -3px -3px 8px var(--sm-shadow-light)
+  sm-neu-raised-sm: >-
+    2px 2px 5px var(--sm-shadow-dark-sm),
+    -2px -2px 5px var(--sm-shadow-light-sm)
+  sm-neu-raised-lg: >-
+    5px 5px 14px var(--sm-shadow-dark-lg),
+    -5px -5px 14px var(--sm-shadow-light-lg)
+  sm-neu-pressed:   >-
+    inset 2px 2px 4px var(--sm-shadow-inset-dark),
+    inset -2px -2px 4px var(--sm-shadow-inset-light)
+
+  # ─── HA card defaults ──────────────────────────────────────────────────
+  ha-card-background:         "var(--card-background-color)"
+  ha-card-border-radius:      "16px"
+  ha-card-border-width:       "0"
+  ha-card-border-color:       "transparent"
+  ha-card-box-shadow:         "var(--sm-neu-raised)"
+  ha-card-header-font-family: "DM Sans, system-ui, sans-serif"
+  ha-card-header-font-size:   "14px"
+  ha-card-header-color:       "var(--primary-text-color)"
+
+  # ─── Radii ─────────────────────────────────────────────────────────────
+  sm-radius-sm:    "8px"
+  sm-radius-md:    "12px"
+  sm-radius:       "16px"
+  sm-radius-lg:    "18px"
+  sm-radius-xl:    "24px"
+  sm-radius-pill:  "999px"
+  ha-card-border-radius: "var(--sm-radius)"
+
+  # ─── Typography ────────────────────────────────────────────────────────
+  primary-font-family:                          "DM Sans, system-ui, sans-serif"
+  paper-font-common-base_-_font-family:         "DM Sans, system-ui, sans-serif"
+  paper-font-common-code_-_font-family:         "JetBrains Mono, ui-monospace, monospace"
+  paper-font-body1_-_font-family:               "DM Sans, system-ui, sans-serif"
+  paper-font-subhead_-_font-family:             "DM Sans, system-ui, sans-serif"
+  paper-font-headline_-_font-family:            "DM Sans, system-ui, sans-serif"
+  paper-font-title_-_font-family:               "DM Sans, system-ui, sans-serif"
+  paper-font-caption_-_font-family:             "DM Sans, system-ui, sans-serif"
+
+  sm-font-sans:    "DM Sans, system-ui, sans-serif"
+  sm-font-display: "DM Sans, system-ui, sans-serif"
+  sm-font-mono:    "JetBrains Mono, ui-monospace, monospace"
+
+  # ─── Sidebar ───────────────────────────────────────────────────────────
+  sidebar-background-color:      "var(--card-background-color)"
+  sidebar-text-color:            "var(--secondary-text-color)"
+  sidebar-icon-color:            "var(--secondary-text-color)"
+  sidebar-selected-background-color: "var(--card-background-color)"
+  sidebar-selected-text-color:   "var(--sm-accent)"
+  sidebar-selected-icon-color:   "var(--sm-accent)"
+
+  # ─── Top app header ────────────────────────────────────────────────────
+  app-header-background-color:   "var(--primary-background-color)"
+  app-header-text-color:         "var(--primary-text-color)"
+  app-header-edit-background-color: "var(--card-background-color)"
+
+  # ─── Dividers / outlines ───────────────────────────────────────────────
+  divider-color:    "rgba(125,128,146,0.10)"
+  outline-color:    "rgba(125,128,146,0.18)"
+
+  # ─── Switch / slider ───────────────────────────────────────────────────
+  switch-checked-color:               "var(--sm-accent)"
+  switch-checked-button-color:        "#ffffff"
+  switch-checked-track-color:         "var(--sm-accent)"
+  switch-unchecked-button-color:      "#ffffff"
+  switch-unchecked-track-color:       "#c4c7d4"
+  paper-toggle-button-checked-bar-color:    "var(--sm-accent)"
+  paper-toggle-button-checked-button-color: "#ffffff"
+  paper-toggle-button-unchecked-bar-color:  "#c4c7d4"
+  paper-toggle-button-unchecked-button-color: "#ffffff"
+
+  paper-slider-active-color:          "var(--sm-accent)"
+  paper-slider-knob-color:            "#ffffff"
+  paper-slider-knob-start-color:      "#ffffff"
+  paper-slider-pin-color:             "var(--sm-accent)"
+  paper-slider-secondary-color:       "var(--sm-accent-glow)"
+  paper-slider-container-color:       "var(--secondary-background-color)"
+
+  # ─── More-info dialog ──────────────────────────────────────────────────
+  ha-dialog-border-radius:  "var(--sm-radius-xl)"
+  mdc-dialog-shape-radius:  "var(--sm-radius-xl)"
+  mdc-theme-surface:        "var(--card-background-color)"
+  mdc-dialog-scrim-color:   "rgba(0,0,0,0.45)"
+
+  # ─── Buttons ───────────────────────────────────────────────────────────
+  mdc-theme-primary:           "var(--sm-accent)"
+  mdc-theme-on-primary:        "#ffffff"
+  mdc-button-outline-color:    "rgba(125,128,146,0.20)"
+  paper-item-icon-color:       "var(--secondary-text-color)"
+
+  # ─── Code / chips / labels ─────────────────────────────────────────────
+  code-editor-background-color:   "var(--card-background-color)"
+  rgb-primary-color:              "232,101,58"
+  rgb-accent-color:               "232,101,58"
+
+  # ─── Tabs ──────────────────────────────────────────────────────────────
+  paper-tabs-selection-bar-color:  "var(--sm-accent)"
+
+  # ─── Misc HA chrome ────────────────────────────────────────────────────
+  paper-listbox-background-color: "var(--card-background-color)"
+  paper-listbox-color:            "var(--primary-text-color)"
+  paper-menu-button-background-color: "var(--card-background-color)"
+  paper-input-container-color:        "var(--secondary-text-color)"
+  paper-input-container-focus-color:  "var(--sm-accent)"
+  ha-textfield-bg-color:              "transparent"
+
+  # ─── Chart colors (HA built-in graphs) ─────────────────────────────────
+  chart-background-color: "var(--card-background-color)"
+  history-unavailable:    "rgba(125,128,146,0.20)"
+  history-unknown:        "rgba(125,128,146,0.10)"
+
+  # Energy dashboard
+  energy-grid-consumption-color: "#7d8092"
+  energy-grid-return-color:      "#3abf7a"
+  energy-solar-color:            "#e8b83a"
+  energy-battery-out-color:      "#e8653a"
+  energy-battery-in-color:       "#3abf7a"
+  energy-non-fossil-color:       "#3a8ee8"
+  energy-gas-color:              "#e84a3a"
+  energy-water-color:            "#3a8ee8"
+
+  # ─── Map ───────────────────────────────────────────────────────────────
+  map-filter:  "saturate(0.85) contrast(0.92)"
