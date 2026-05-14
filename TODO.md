@@ -19,5 +19,5 @@ Build Lit web components for the highest-traffic surfaces, consuming the `--smar
 
 ## Tooling / packaging
 
-- [x] **Visual editors for custom cards** — `getConfigElement()` on each card; uses `<ha-form>` schemas. Status pill editor covers the static mode only; entity-bound configs still need YAML for the `states` map.
+- [x] **Visual editors for custom cards** — `getConfigElement()` on each card; uses `<ha-form>` schemas. Status pill editor supports both static and entity-bound modes (entity-bound has a custom rows widget for the states map).
 - [ ] **HACS-installable** — register the repo as a HACS frontend integration so users can install via the store instead of `git clone`.
