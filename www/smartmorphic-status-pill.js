@@ -20,6 +20,42 @@
 //   fallback: { variant: info, label: Unknown }
 // =============================================================================
 
+// =============================================================================
+// Canonical register helper — installs on window so all cards share it.
+// Fixes the picker-spinner regression: HA's card factory uses
+// customElements.whenDefined(tag), but scoped-custom-element-registry
+// (loaded by Mushroom and others via HACS) keeps those promises pending
+// until an instance of the element is upgraded via DOM connection.
+// Briefly appending a probe element triggers the upgrade and resolves
+// the promise so the picker stops spinning.
+// =============================================================================
+if (!window.smartmorphicDefineCard) {
+  window.smartmorphicDefineCard = function (tag, ctor) {
+    if (customElements.get(tag)) return;
+    try {
+      customElements.define(tag, ctor);
+    } catch (e) {
+      console.error("[" + tag + "] define threw:", e);
+      return;
+    }
+    const probe = () => {
+      try {
+        if (!document.body) return;
+        const el = document.createElement(tag);
+        el.style.cssText =
+          "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
+        document.body.appendChild(el);
+        Promise.resolve().then(() => el.remove());
+      } catch (_) {
+        // best-effort
+      }
+    };
+    if (document.body) probe();
+    else document.addEventListener("DOMContentLoaded", probe, { once: true });
+    console.info("[" + tag + "] registered");
+  };
+}
+
 const VARIANTS = {
   ok:      { color: "var(--smartmorphic-color-green, #3abf7a)", icon: "mdi:check-circle" },
   warning: { color: "var(--smartmorphic-color-amber, #e8b83a)", icon: "mdi:alert" },
@@ -137,29 +173,7 @@ class SmartmorphicStatusPill extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-status-pill")) {
-  console.warn("[smartmorphic-status-pill] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-status-pill", SmartmorphicStatusPill);
-  } catch (e) {
-    console.error("[smartmorphic-status-pill] define threw:", e);
-  }
-}
-console.info("[smartmorphic-status-pill] post-define get:", customElements.get("smartmorphic-status-pill") ? "REGISTERED" : "NOT FOUND");
-
-if (!window.__smartmorphicUpgradeScheduled) {
-  window.__smartmorphicUpgradeScheduled = true;
-  setTimeout(() => {
-    try {
-      if (typeof customElements.upgrade === "function") {
-        customElements.upgrade(document);
-      }
-    } catch (e) {
-      console.warn("[smartmorphic] document upgrade failed:", e);
-    }
-  }, 0);
-}
+window.smartmorphicDefineCard("smartmorphic-status-pill", SmartmorphicStatusPill);
 
 // =============================================================================
 // Visual editor — supports both static and entity-bound modes.
@@ -476,16 +490,7 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-status-pill-editor")) {
-  console.warn("[smartmorphic-status-pill-editor] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-status-pill-editor", SmartmorphicStatusPillEditor);
-  } catch (e) {
-    console.error("[smartmorphic-status-pill-editor] define threw:", e);
-  }
-}
-
+window.smartmorphicDefineCard("smartmorphic-status-pill-editor", SmartmorphicStatusPillEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-status-pill",
@@ -495,7 +500,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.5.0 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.6.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
