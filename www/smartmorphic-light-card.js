@@ -53,6 +53,10 @@ class SmartmorphicLightCard extends HTMLElement {
     return { entity: lights[0] ?? "" };
   }
 
+  static getConfigElement() {
+    return document.createElement("smartmorphic-light-card-editor");
+  }
+
   _stateObj() {
     return this._hass?.states?.[this._config.entity] ?? null;
   }
@@ -342,6 +346,56 @@ class SmartmorphicLightCard extends HTMLElement {
 
 customElements.define("smartmorphic-light-card", SmartmorphicLightCard);
 
+// =============================================================================
+// Visual editor — uses HA's built-in <ha-form> for entity + icon pickers.
+// =============================================================================
+const LIGHT_EDITOR_LABELS = {
+  entity: "Light entity",
+  name: "Name (optional)",
+  icon: "Icon (optional)",
+};
+
+const LIGHT_EDITOR_SCHEMA = [
+  { name: "entity", required: true, selector: { entity: { domain: "light" } } },
+  { name: "name", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+];
+
+class SmartmorphicLightCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...config };
+    this._ensureForm();
+    this._form.data = this._config;
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) this._form.hass = hass;
+  }
+
+  _ensureForm() {
+    if (this._form) return;
+    this._form = document.createElement("ha-form");
+    this._form.schema = LIGHT_EDITOR_SCHEMA;
+    this._form.computeLabel = (s) => LIGHT_EDITOR_LABELS[s.name] ?? s.name;
+    this._form.addEventListener("value-changed", (e) => this._valueChanged(e));
+    if (this._hass) this._form.hass = this._hass;
+    this.appendChild(this._form);
+  }
+
+  _valueChanged(e) {
+    const next = { ...this._config, ...e.detail.value };
+    this._config = next;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: next },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+}
+
+customElements.define("smartmorphic-light-card-editor", SmartmorphicLightCardEditor);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-light-card",
@@ -351,7 +405,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.1.1 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.2.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
