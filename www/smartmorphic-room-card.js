@@ -251,12 +251,21 @@ if (customElements.get("smartmorphic-room-card")) {
 }
 console.info("[smartmorphic-room-card] post-define get:", customElements.get("smartmorphic-room-card") ? "REGISTERED" : "NOT FOUND");
 
-try {
-  if (typeof customElements.upgrade === "function") {
-    customElements.upgrade(document);
-  }
-} catch (e) {
-  console.warn("[smartmorphic-room-card] upgrade nudge failed:", e);
+// Workaround for scoped-custom-element-registry: deferred document upgrade
+// once per page load. Resolves any whenDefined promises that were pending
+// when our cards registered. Global guard prevents the three card scripts
+// from triple-upgrading and racing each other.
+if (!window.__smartmorphicUpgradeScheduled) {
+  window.__smartmorphicUpgradeScheduled = true;
+  setTimeout(() => {
+    try {
+      if (typeof customElements.upgrade === "function") {
+        customElements.upgrade(document);
+      }
+    } catch (e) {
+      console.warn("[smartmorphic] document upgrade failed:", e);
+    }
+  }, 0);
 }
 
 // =============================================================================
@@ -330,7 +339,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.3.2 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.3.3 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
