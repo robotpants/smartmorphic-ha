@@ -109,18 +109,20 @@ class SmartmorphicRoomCard extends HTMLElement {
       }
       .card {
         background: var(--smartmorphic-surface, var(--ha-card-background, var(--card-background-color)));
-        border-radius: var(--smartmorphic-radius, 20px);
+        border-radius: var(--smartmorphic-radius, 18px);
         box-shadow: var(--smartmorphic-neu-raised,
           6px 6px 14px rgba(0, 0, 0, 0.22),
           -6px -6px 14px rgba(255, 255, 255, 0.05));
-        padding: 16px;
+        padding: var(--smartmorphic-space-5, 16px);
         display: grid;
         grid-template-columns: auto 1fr auto;
         grid-template-areas: "icon text dot";
         align-items: center;
-        gap: 14px;
+        gap: var(--smartmorphic-space-4, 14px);
         cursor: pointer;
-        transition: box-shadow 180ms ease, transform 180ms ease;
+        transition:
+          box-shadow var(--smartmorphic-transition-base, 180ms ease),
+          transform var(--smartmorphic-transition-base, 180ms ease);
         user-select: none;
         position: relative;
       }
@@ -134,13 +136,14 @@ class SmartmorphicRoomCard extends HTMLElement {
         grid-area: icon;
         width: 44px;
         height: 44px;
-        border-radius: 14px;
+        border-radius: var(--smartmorphic-radius-sm, 12px);
         display: grid;
         place-items: center;
         box-shadow: var(--smartmorphic-neu-pressed,
           inset 3px 3px 6px rgba(0, 0, 0, 0.25),
           inset -3px -3px 6px rgba(255, 255, 255, 0.06));
         color: var(--primary-text-color);
+        transition: color var(--smartmorphic-transition-base, 180ms ease);
       }
       .icon-well ha-icon, .icon-well ha-svg-icon {
         --mdc-icon-size: 22px;
@@ -153,7 +156,7 @@ class SmartmorphicRoomCard extends HTMLElement {
         gap: 2px;
       }
       .name {
-        font-family: 'DM Sans', var(--primary-font-family, sans-serif);
+        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-weight: 600;
         font-size: 1rem;
         color: var(--primary-text-color);
@@ -162,7 +165,7 @@ class SmartmorphicRoomCard extends HTMLElement {
         text-overflow: ellipsis;
       }
       .secondary {
-        font-family: 'DM Sans', var(--primary-font-family, sans-serif);
+        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-size: 0.8rem;
         color: var(--secondary-text-color);
         white-space: nowrap;
@@ -178,7 +181,9 @@ class SmartmorphicRoomCard extends HTMLElement {
         box-shadow: 0 0 12px var(--smartmorphic-accent-glow-tight, rgba(232, 101, 58, 0.55));
         opacity: 0;
         transform: scale(0.6);
-        transition: opacity 220ms ease, transform 220ms ease;
+        transition:
+          opacity var(--smartmorphic-transition-slow, 220ms ease),
+          transform var(--smartmorphic-transition-slow, 220ms ease);
       }
       .card.active .ember {
         opacity: 1;
@@ -300,7 +305,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.2.0 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.3.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
