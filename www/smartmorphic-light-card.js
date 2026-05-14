@@ -172,8 +172,8 @@ class SmartmorphicLightCard extends HTMLElement {
         box-shadow: var(--smartmorphic-neu-raised,
           6px 6px 14px rgba(0,0,0,0.22),
           -6px -6px 14px rgba(255,255,255,0.05));
-        padding: 16px;
-        transition: box-shadow 180ms ease;
+        padding: var(--smartmorphic-space-5, 16px);
+        transition: box-shadow var(--smartmorphic-transition-base, 180ms ease);
         user-select: none;
       }
       .header {
@@ -181,31 +181,31 @@ class SmartmorphicLightCard extends HTMLElement {
         grid-template-columns: auto 1fr auto;
         grid-template-areas: "icon text dot";
         align-items: center;
-        gap: 14px;
+        gap: var(--smartmorphic-space-4, 14px);
         cursor: pointer;
       }
       .icon-well {
         grid-area: icon;
         width: 44px;
         height: 44px;
-        border-radius: 14px;
+        border-radius: var(--smartmorphic-radius-sm, 12px);
         display: grid;
         place-items: center;
         box-shadow: var(--smartmorphic-neu-pressed,
           inset 3px 3px 6px rgba(0,0,0,0.25),
           inset -3px -3px 6px rgba(255,255,255,0.06));
         color: var(--primary-text-color);
-        transition: color 180ms ease;
+        transition: color var(--smartmorphic-transition-base, 180ms ease);
       }
       .icon-well ha-icon { --mdc-icon-size: 22px; }
       .text { grid-area: text; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
       .name {
-        font-family: 'DM Sans', var(--primary-font-family, sans-serif);
+        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-weight: 600; font-size: 1rem; color: var(--primary-text-color);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       .secondary {
-        font-family: 'DM Sans', var(--primary-font-family, sans-serif);
+        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-size: 0.8rem; color: var(--secondary-text-color);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
@@ -215,21 +215,23 @@ class SmartmorphicLightCard extends HTMLElement {
         background: var(--smartmorphic-accent, #e8653a);
         box-shadow: 0 0 12px var(--smartmorphic-accent-glow-tight, rgba(232,101,58,0.55));
         opacity: 0; transform: scale(0.6);
-        transition: opacity 220ms ease, transform 220ms ease;
+        transition:
+          opacity var(--smartmorphic-transition-slow, 220ms ease),
+          transform var(--smartmorphic-transition-slow, 220ms ease);
       }
       .card.on .ember { opacity: 1; transform: scale(1); }
       .card.on .icon-well { color: var(--smartmorphic-accent, #e8653a); }
 
       .panel {
-        margin-top: 14px;
-        padding-top: 14px;
+        margin-top: var(--smartmorphic-space-4, 14px);
+        padding-top: var(--smartmorphic-space-4, 14px);
         border-top: 1px solid var(--divider-color, rgba(127,127,127,0.18));
-        display: flex; flex-direction: column; gap: 14px;
+        display: flex; flex-direction: column; gap: var(--smartmorphic-space-4, 14px);
       }
-      .row { display: flex; flex-direction: column; gap: 6px; }
+      .row { display: flex; flex-direction: column; gap: var(--smartmorphic-space-2, 6px); }
       .row-label {
         display: flex; justify-content: space-between;
-        font-family: 'DM Sans', var(--primary-font-family, sans-serif);
+        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-size: 0.78rem; color: var(--secondary-text-color);
       }
       input[type="range"] {
@@ -405,7 +407,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.2.0 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.3.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
