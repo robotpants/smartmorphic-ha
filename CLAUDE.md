@@ -29,3 +29,14 @@ When building or editing custom Lovelace cards in `www/`:
 ## Visual style direction
 
 The dashboard mockups (climate, automations, mobile companion) are being refined in Claude Design. The shipped theme + cards are close in structure but **still off in color, type weight, and proportion vs. the reference**. When the user provides exported example files (CSS, design tokens, screenshots), align the theme + custom cards to match. Until then, do not invent new colors — stick to the tokens defined in `themes/smartmorphic.yaml`.
+
+## Style guide branch
+
+The `style-guide` branch holds the Claude Design export (`design_handoff_smartmorphic_theme/` directory: tokens, components, starter theme, prototype HTML/JSX, screenshots). It is the **source of truth** for visual style going forward.
+
+Rules:
+
+- **Never merge `style-guide` into `main`.** It is reference material, not buildable code.
+- **Treat the branch as read-only** unless the user explicitly asks you to update it.
+- **Pull values FROM it INTO main** only during a style-alignment pass that the user has approved (e.g., "do the alignment", "apply the design export"). Read the relevant file(s) from `origin/style-guide` via `git show` or `git ls-tree`; do not check out the branch into the working tree.
+- During an alignment pass, the export's `tokens.md` and `starter-theme.yaml` outrank anything currently in `themes/smartmorphic.yaml` — when values diverge, the export wins.
