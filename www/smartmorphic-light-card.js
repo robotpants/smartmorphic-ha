@@ -346,7 +346,16 @@ class SmartmorphicLightCard extends HTMLElement {
   }
 }
 
-customElements.define("smartmorphic-light-card", SmartmorphicLightCard);
+if (customElements.get("smartmorphic-light-card")) {
+  console.warn("[smartmorphic-light-card] already registered, skipping re-define");
+} else {
+  try {
+    customElements.define("smartmorphic-light-card", SmartmorphicLightCard);
+  } catch (e) {
+    console.error("[smartmorphic-light-card] define threw:", e);
+  }
+}
+console.info("[smartmorphic-light-card] post-define get:", customElements.get("smartmorphic-light-card") ? "REGISTERED" : "NOT FOUND");
 
 // =============================================================================
 // Visual editor — uses HA's built-in <ha-form> for entity + icon pickers.
@@ -396,7 +405,15 @@ class SmartmorphicLightCardEditor extends HTMLElement {
   }
 }
 
-customElements.define("smartmorphic-light-card-editor", SmartmorphicLightCardEditor);
+if (customElements.get("smartmorphic-light-card-editor")) {
+  console.warn("[smartmorphic-light-card-editor] already registered, skipping re-define");
+} else {
+  try {
+    customElements.define("smartmorphic-light-card-editor", SmartmorphicLightCardEditor);
+  } catch (e) {
+    console.error("[smartmorphic-light-card-editor] define threw:", e);
+  }
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -407,7 +424,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.3.0 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.3.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
