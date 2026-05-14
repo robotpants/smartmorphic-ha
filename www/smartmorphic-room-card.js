@@ -1,9 +1,9 @@
 // =============================================================================
 // Smartmorphic — room card
 //
-// Custom Lovelace card. Renders a neumorphic well representing a room. Watches
-// a list of entities to determine "active" state, surfaces an ambient temp,
-// and navigates to a detail view on tap.
+// Custom Lovelace card. Renders a room as a single soft surface with a paired
+// icon well (flat tinted when idle, accent-glow when any of the watched
+// entities are active). Tap navigates to a detail view.
 //
 // Config:
 //   type: custom:smartmorphic-room-card
@@ -16,6 +16,7 @@
 //   navigate: /smartmorphic/living-room    # optional, tap target
 //
 // Reads --smartmorphic-* CSS variables from the active theme.
+// Style aligned to design_handoff_smartmorphic_theme (see style-guide branch).
 // =============================================================================
 
 const ACTIVE_STATES = new Set(["on", "open", "playing", "home", "heat", "cool", "auto"]);
@@ -109,16 +110,16 @@ class SmartmorphicRoomCard extends HTMLElement {
       }
       .card {
         background: var(--smartmorphic-surface, var(--ha-card-background, var(--card-background-color)));
-        border-radius: var(--smartmorphic-radius, 18px);
+        border-radius: var(--smartmorphic-radius, 16px);
         box-shadow: var(--smartmorphic-neu-raised,
-          6px 6px 14px rgba(0, 0, 0, 0.22),
-          -6px -6px 14px rgba(255, 255, 255, 0.05));
+          3px 3px 8px rgba(0, 0, 0, 0.22),
+          -3px -3px 8px rgba(255, 255, 255, 0.04));
         padding: var(--smartmorphic-space-5, 16px);
         display: grid;
-        grid-template-columns: auto 1fr auto;
-        grid-template-areas: "icon text dot";
+        grid-template-columns: auto 1fr;
+        grid-template-areas: "icon text";
         align-items: center;
-        gap: var(--smartmorphic-space-4, 14px);
+        gap: var(--smartmorphic-space-4, 12px);
         cursor: pointer;
         transition:
           box-shadow var(--smartmorphic-transition-base, 180ms ease),
@@ -128,25 +129,33 @@ class SmartmorphicRoomCard extends HTMLElement {
       }
       .card:active {
         box-shadow: var(--smartmorphic-neu-pressed,
-          inset 4px 4px 8px rgba(0, 0, 0, 0.25),
-          inset -4px -4px 8px rgba(255, 255, 255, 0.06));
+          inset 2px 2px 4px rgba(0, 0, 0, 0.30),
+          inset -2px -2px 4px rgba(255, 255, 255, 0.04));
         transform: scale(0.995);
       }
       .icon-well {
         grid-area: icon;
-        width: 44px;
-        height: 44px;
-        border-radius: var(--smartmorphic-radius-sm, 12px);
+        width: 38px;
+        height: 38px;
+        border-radius: var(--smartmorphic-radius-md, 12px);
         display: grid;
         place-items: center;
-        box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0, 0, 0, 0.25),
-          inset -3px -3px 6px rgba(255, 255, 255, 0.06));
-        color: var(--primary-text-color);
-        transition: color var(--smartmorphic-transition-base, 180ms ease);
+        background: var(--smartmorphic-off-tint, rgba(125,128,146,0.10));
+        color: var(--secondary-text-color);
+        transition:
+          background var(--smartmorphic-transition-base, 180ms ease),
+          box-shadow var(--smartmorphic-transition-base, 180ms ease),
+          color var(--smartmorphic-transition-base, 180ms ease);
       }
       .icon-well ha-icon, .icon-well ha-svg-icon {
-        --mdc-icon-size: 22px;
+        --mdc-icon-size: 20px;
+      }
+      .card.active .icon-well {
+        background: var(--smartmorphic-accent-glow, rgba(232, 101, 58, 0.35));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.18),
+          0 0 0 1px var(--smartmorphic-accent-glow, rgba(232, 101, 58, 0.35));
+        color: var(--smartmorphic-accent, #e8653a);
       }
       .text {
         grid-area: text;
@@ -158,39 +167,26 @@ class SmartmorphicRoomCard extends HTMLElement {
       .name {
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 14px;
+        line-height: 1.2;
         color: var(--primary-text-color);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        transition: color var(--smartmorphic-transition-base, 180ms ease);
+      }
+      .card.active .name {
+        color: var(--smartmorphic-accent, #e8653a);
       }
       .secondary {
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-size: 0.8rem;
+        font-weight: 500;
+        font-size: 11px;
+        line-height: 1.4;
         color: var(--secondary-text-color);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
-      .ember {
-        grid-area: dot;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--smartmorphic-accent, #e8653a);
-        box-shadow: 0 0 12px var(--smartmorphic-accent-glow-tight, rgba(232, 101, 58, 0.55));
-        opacity: 0;
-        transform: scale(0.6);
-        transition:
-          opacity var(--smartmorphic-transition-slow, 220ms ease),
-          transform var(--smartmorphic-transition-slow, 220ms ease);
-      }
-      .card.active .ember {
-        opacity: 1;
-        transform: scale(1);
-      }
-      .card.active .icon-well {
-        color: var(--smartmorphic-accent, #e8653a);
       }
     `;
 
@@ -204,7 +200,6 @@ class SmartmorphicRoomCard extends HTMLElement {
           <div class="name">${this._escape(this._config.name)}</div>
           <div class="secondary"></div>
         </div>
-        <div class="ember"></div>
       </div>
     `;
 
@@ -251,10 +246,6 @@ if (customElements.get("smartmorphic-room-card")) {
 }
 console.info("[smartmorphic-room-card] post-define get:", customElements.get("smartmorphic-room-card") ? "REGISTERED" : "NOT FOUND");
 
-// Workaround for scoped-custom-element-registry: deferred document upgrade
-// once per page load. Resolves any whenDefined promises that were pending
-// when our cards registered. Global guard prevents the three card scripts
-// from triple-upgrading and racing each other.
 if (!window.__smartmorphicUpgradeScheduled) {
   window.__smartmorphicUpgradeScheduled = true;
   setTimeout(() => {
@@ -334,12 +325,12 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-room-card",
   name: "Smartmorphic Room Card",
-  description: "Neumorphic room tile with active-state ember and ambient temp.",
+  description: "Neumorphic room tile with active-state icon well.",
   preview: false,
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.3.3 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.4.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
