@@ -25,22 +25,11 @@ When building or editing custom Lovelace cards in `www/`:
 - **CSS fallbacks must survive the editor preview's missing theme.** The card-picker modal does not inherit the dashboard theme, so any `var(--smartmorphic-*, fallback)` fallback gets used as-is. Pick fallback shadow/color values that look acceptable on both light and dark backgrounds (mostly: low-opacity blacks + very low-opacity whites, not the high-opacity whites the theme actually uses in light mode).
 - **Bump the `console.info` version banner on every functional change** so it's obvious when a browser is serving a stale cached copy.
 - **Every new custom card MUST ship with a functional visual editor.** Implement `static getConfigElement()` returning a custom element. The editor must cover every config field the card actually supports — wrap `<ha-form>` with a schema for the simple parts, build inline DOM widgets for anything `<ha-form>` can't express (variable-key dicts, repeating rows, conditional sections). Falling back to "edit YAML for this part" doesn't count as supported.
-- **Register via `window.smartmorphicDefineCard(tag, ctor)`, never bare `customElements.define`.** Each card file must inline-install the helper at the top:
+- **Register via `window.smartmorphicDefineCard(tag, ctor)`, never bare `customElements.define`.** Each card file must inline-install the helper at the top. Canonical implementation in `www/smartmorphic-room-card.js` — copy verbatim.
 
-  ```js
-  // See www/smartmorphic-room-card.js for the canonical implementation —
-  // copy it verbatim into every new card file. Helper does:
-  //   1. customElements.define(tag, ctor)
-  //   2. attempt to resolve any pending whenDefined() deferreds via the
-  //      polyfill's internal map (multiple property-name guesses)
-  //   3. attach a probe instance under <body> for 200ms to trigger the
-  //      upgrade-driven resolution path
-  //   4. customElements.upgrade(document)
-  //   5. repeat steps 2-4 at 0ms / 500ms / 1500ms to catch picker dialogs
-  //      opening in late-bound scoped registries
-  ```
+  Why: HA frontend loads scripts from `extra_module_url` BEFORE HACS-installed cards. When Mushroom (or any HACS card depending on `@webcomponents/scoped-custom-element-registry`) loads later, the polyfill **replaces `window.customElements` with a fresh empty registry** — it does NOT adopt pre-existing native-registry definitions. So a one-time `customElements.define()` lands in the (soon to be orphaned) native registry; HA's card-picker then queries the polyfill registry and finds nothing.
 
-  Why: `scoped-custom-element-registry` (loaded by Mushroom HACS) keeps `customElements.whenDefined()` promises pending if `whenDefined()` was called BEFORE our `define()` ran (e.g. HA frontend pre-warmed the lookup at boot). HA's card-picker awaits that stuck promise. A simple probe-and-remove isn't enough — the polyfill needs multiple resolve paths and a probe lifetime long enough for the upgrade callback to settle. Apply the helper to BOTH the card class and its editor class.
+  The helper polls every 500ms for 30 seconds and re-registers if the current `customElements.get(tag)` doesn't return our class. Idempotent — each tick either no-ops (already registered in current registry) or re-registers (registry was just swapped). Apply to BOTH the card class and its editor class.
 
 ## Visual style direction
 
