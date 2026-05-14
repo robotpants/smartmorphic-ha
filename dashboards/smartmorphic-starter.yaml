@@ -1,0 +1,185 @@
+# =============================================================================
+# Smartmorphic — starter Lovelace dashboard
+#
+# Drop this in as a new dashboard (Settings → Dashboards → Add Dashboard →
+# "From YAML" → paste contents), or reference from configuration.yaml:
+#
+#   lovelace:
+#     dashboards:
+#       smartmorphic:
+#         mode: yaml
+#         filename: smartmorphic-ha/dashboards/smartmorphic-starter.yaml
+#         title: Home
+#         icon: mdi:home
+#         show_in_sidebar: true
+#
+# Replace every REPLACE_ME placeholder with real entity IDs before saving.
+# Built on Mushroom — install via HACS first.
+# =============================================================================
+
+title: Home
+theme: Smartmorphic
+views:
+  # ---------------------------------------------------------------------------
+  # Main view — greeting, scenes, status, rooms
+  # ---------------------------------------------------------------------------
+  - title: Home
+    path: home
+    icon: mdi:home-variant
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## Good {{ 'morning' if now().hour < 12 else 'afternoon' if now().hour < 18 else 'evening' }}
+              {{ states('sensor.REPLACE_ME_outdoor_temp') }}° outside · {{ states('weather.REPLACE_ME_home') }}
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-chips-card
+                alignment: start
+                chips:
+                  - type: template
+                    icon: mdi:weather-sunset
+                    content: Morning
+                    tap_action:
+                      action: call-service
+                      service: scene.turn_on
+                      target:
+                        entity_id: scene.REPLACE_ME_morning
+                  - type: template
+                    icon: mdi:sofa
+                    content: Relax
+                    tap_action:
+                      action: call-service
+                      service: scene.turn_on
+                      target:
+                        entity_id: scene.REPLACE_ME_relax
+                  - type: template
+                    icon: mdi:weather-night
+                    content: Night
+                    tap_action:
+                      action: call-service
+                      service: scene.turn_on
+                      target:
+                        entity_id: scene.REPLACE_ME_night
+                  - type: template
+                    icon: mdi:movie-open
+                    content: Movie
+                    tap_action:
+                      action: call-service
+                      service: scene.turn_on
+                      target:
+                        entity_id: scene.REPLACE_ME_movie
+
+      - type: grid
+        title: Status
+        cards:
+          - type: tile
+            entity: lock.REPLACE_ME_front_door
+            name: Front Door
+          - type: tile
+            entity: alarm_control_panel.REPLACE_ME_alarm
+            name: Alarm
+          - type: tile
+            entity: cover.REPLACE_ME_garage
+            name: Garage
+          - type: tile
+            entity: sensor.REPLACE_ME_indoor_temp
+            name: Indoor
+            color: accent
+
+      - type: grid
+        title: Rooms
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Living Room
+            secondary: "{{ states('sensor.REPLACE_ME_living_room_temp') }}° · {{ states('light.REPLACE_ME_living_room') }}"
+            icon: mdi:sofa
+            icon_color: |
+              {% if is_state('light.REPLACE_ME_living_room', 'on') %}orange{% else %}grey{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /smartmorphic/living-room
+
+          - type: custom:mushroom-template-card
+            primary: Kitchen
+            secondary: "{{ states('sensor.REPLACE_ME_kitchen_temp') }}° · {{ states('light.REPLACE_ME_kitchen') }}"
+            icon: mdi:silverware-fork-knife
+            icon_color: |
+              {% if is_state('light.REPLACE_ME_kitchen', 'on') %}orange{% else %}grey{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /smartmorphic/kitchen
+
+          - type: custom:mushroom-template-card
+            primary: Bedroom
+            secondary: "{{ states('sensor.REPLACE_ME_bedroom_temp') }}° · {{ states('light.REPLACE_ME_bedroom') }}"
+            icon: mdi:bed
+            icon_color: |
+              {% if is_state('light.REPLACE_ME_bedroom', 'on') %}orange{% else %}grey{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /smartmorphic/bedroom
+
+          - type: custom:mushroom-template-card
+            primary: Office
+            secondary: "{{ states('sensor.REPLACE_ME_office_temp') }}° · {{ states('light.REPLACE_ME_office') }}"
+            icon: mdi:desk
+            icon_color: |
+              {% if is_state('light.REPLACE_ME_office', 'on') %}orange{% else %}grey{% endif %}
+            tap_action:
+              action: navigate
+              navigation_path: /smartmorphic/office
+
+  # ---------------------------------------------------------------------------
+  # Per-room detail view (template — duplicate per room, change entity IDs
+  # and path. The navigation_path in the room cards above must match.)
+  # ---------------------------------------------------------------------------
+  - title: Living Room
+    path: living-room
+    icon: mdi:sofa
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        title: Lights
+        cards:
+          - type: tile
+            entity: light.REPLACE_ME_living_room
+            features:
+              - type: light-brightness
+          - type: tile
+            entity: light.REPLACE_ME_living_room_lamp
+            features:
+              - type: light-brightness
+
+      - type: grid
+        title: Climate
+        cards:
+          - type: tile
+            entity: sensor.REPLACE_ME_living_room_temp
+            name: Temperature
+          - type: tile
+            entity: sensor.REPLACE_ME_living_room_humidity
+            name: Humidity
+          - type: tile
+            entity: climate.REPLACE_ME_living_room
+            name: Thermostat
+
+      - type: grid
+        title: Media
+        cards:
+          - type: custom:mushroom-media-player-card
+            entity: media_player.REPLACE_ME_living_room
+            use_media_info: true
+            media_controls:
+              - on_off
+              - play_pause_stop
+              - previous
+              - next
+            volume_controls:
+              - volume_set
+              - volume_mute
