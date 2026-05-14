@@ -133,65 +133,322 @@ class SmartmorphicStatusPill extends HTMLElement {
 customElements.define("smartmorphic-status-pill", SmartmorphicStatusPill);
 
 // =============================================================================
-// Visual editor — static mode only. Entity-bound configs (with `states` map)
-// must still be edited as YAML; the form will show the static fields.
+// Visual editor — supports both static and entity-bound modes.
 // =============================================================================
-const PILL_EDITOR_LABELS = {
-  variant: "Variant",
-  label: "Label",
-  icon: "Icon",
-};
+const VARIANT_OPTIONS = [
+  { value: "ok", label: "OK (green)" },
+  { value: "warning", label: "Warning (amber)" },
+  { value: "alert", label: "Alert (pink)" },
+  { value: "info", label: "Info (blue)" },
+];
 
-const PILL_EDITOR_SCHEMA = [
-  {
-    name: "variant",
-    required: true,
-    selector: {
-      select: {
-        options: [
-          { value: "ok", label: "OK (green)" },
-          { value: "warning", label: "Warning (amber)" },
-          { value: "alert", label: "Alert (pink)" },
-          { value: "info", label: "Info (blue)" },
-        ],
-        mode: "dropdown",
-      },
-    },
-  },
+const STATIC_SCHEMA = [
+  { name: "variant", required: true, selector: { select: { options: VARIANT_OPTIONS, mode: "dropdown" } } },
   { name: "label", selector: { text: {} } },
   { name: "icon", selector: { icon: {} } },
 ];
 
+const ENTITY_PICKER_SCHEMA = [
+  { name: "entity", required: true, selector: { entity: {} } },
+];
+
+const FALLBACK_SCHEMA = [
+  { name: "variant", selector: { select: { options: VARIANT_OPTIONS, mode: "dropdown" } } },
+  { name: "label", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+];
+
+const LABELS = {
+  variant: "Variant",
+  label: "Label",
+  icon: "Icon",
+  entity: "Entity",
+};
+
 class SmartmorphicStatusPillEditor extends HTMLElement {
   setConfig(config) {
     this._config = { ...config };
-    this._ensureForm();
-    this._form.data = this._config;
+    if (!this._mode) {
+      this._mode = config.entity ? "entity" : "static";
+    }
+    this._render();
   }
 
   set hass(hass) {
     this._hass = hass;
-    if (this._form) this._form.hass = hass;
+    this._propagateHass();
   }
 
-  _ensureForm() {
-    if (this._form) return;
-    this._form = document.createElement("ha-form");
-    this._form.schema = PILL_EDITOR_SCHEMA;
-    this._form.computeLabel = (s) => PILL_EDITOR_LABELS[s.name] ?? s.name;
-    this._form.addEventListener("value-changed", (e) => this._valueChanged(e));
-    if (this._hass) this._form.hass = this._hass;
-    this.appendChild(this._form);
+  _propagateHass() {
+    if (!this._hass) return;
+    if (this._staticForm) this._staticForm.hass = this._hass;
+    if (this._entityForm) this._entityForm.hass = this._hass;
+    if (this._fallbackForm) this._fallbackForm.hass = this._hass;
+    this.querySelectorAll("ha-form").forEach((f) => { f.hass = this._hass; });
   }
 
-  _valueChanged(e) {
-    const next = { ...this._config, ...e.detail.value };
-    this._config = next;
+  _emit() {
     this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config: next },
+      detail: { config: this._config },
       bubbles: true,
       composed: true,
     }));
+  }
+
+  _setMode(mode) {
+    if (this._mode === mode) return;
+    this._mode = mode;
+    if (mode === "static") {
+      this._config = { variant: this._config.variant ?? "ok", label: this._config.label, icon: this._config.icon };
+    } else {
+      this._config = {
+        entity: this._config.entity ?? "",
+        states: this._config.states ?? {},
+        fallback: this._config.fallback ?? { variant: "info" },
+      };
+    }
+    this._render();
+    this._emit();
+  }
+
+  _render() {
+    this._staticForm = null;
+    this._entityForm = null;
+    this._fallbackForm = null;
+    this.innerHTML = `
+      <style>
+        .mode-toggle {
+          display: flex;
+          gap: 8px;
+          margin: 0 0 16px;
+          padding: 4px;
+          background: var(--secondary-background-color, rgba(127,127,127,0.08));
+          border-radius: 8px;
+        }
+        .mode-toggle button {
+          flex: 1;
+          padding: 8px 12px;
+          background: transparent;
+          color: var(--secondary-text-color);
+          border: none;
+          border-radius: 6px;
+          font: inherit;
+          cursor: pointer;
+        }
+        .mode-toggle button[aria-pressed="true"] {
+          background: var(--primary-background-color, white);
+          color: var(--primary-text-color);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .section { margin-top: 18px; }
+        .section h4 {
+          margin: 0 0 8px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--secondary-text-color);
+        }
+        .hint {
+          font-size: 0.8rem;
+          color: var(--secondary-text-color);
+          margin: 0 0 8px;
+        }
+        .states-rows { display: flex; flex-direction: column; gap: 10px; }
+        .states-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr auto auto;
+          gap: 6px;
+          align-items: end;
+        }
+        .states-row label {
+          display: flex;
+          flex-direction: column;
+          font-size: 0.72rem;
+          color: var(--secondary-text-color);
+          gap: 2px;
+        }
+        .states-row input,
+        .states-row select {
+          padding: 6px 8px;
+          background: var(--card-background-color, white);
+          color: var(--primary-text-color);
+          border: 1px solid var(--divider-color, rgba(127,127,127,0.2));
+          border-radius: 6px;
+          font: inherit;
+          min-width: 0;
+        }
+        .icon-button {
+          padding: 6px 8px;
+          background: transparent;
+          color: var(--secondary-text-color);
+          border: 1px solid var(--divider-color, rgba(127,127,127,0.2));
+          border-radius: 6px;
+          cursor: pointer;
+          height: 32px;
+          align-self: end;
+        }
+        .icon-button:hover { color: var(--primary-text-color); }
+        .add-state {
+          align-self: flex-start;
+          margin-top: 4px;
+          padding: 6px 12px;
+          background: var(--primary-color, #e8653a);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font: inherit;
+          cursor: pointer;
+        }
+      </style>
+      <div class="mode-toggle">
+        <button type="button" data-mode="static" aria-pressed="${this._mode === "static"}">Static</button>
+        <button type="button" data-mode="entity" aria-pressed="${this._mode === "entity"}">Entity-bound</button>
+      </div>
+      <div class="body"></div>
+    `;
+    this.querySelectorAll(".mode-toggle button").forEach((btn) => {
+      btn.addEventListener("click", () => this._setMode(btn.dataset.mode));
+    });
+    const body = this.querySelector(".body");
+    if (this._mode === "static") {
+      this._renderStatic(body);
+    } else {
+      this._renderEntity(body);
+    }
+    this._propagateHass();
+  }
+
+  _renderStatic(parent) {
+    this._staticForm = document.createElement("ha-form");
+    this._staticForm.schema = STATIC_SCHEMA;
+    this._staticForm.computeLabel = (s) => LABELS[s.name] ?? s.name;
+    this._staticForm.data = this._config;
+    this._staticForm.addEventListener("value-changed", (e) => {
+      this._config = { ...this._config, ...e.detail.value };
+      this._emit();
+    });
+    parent.appendChild(this._staticForm);
+  }
+
+  _renderEntity(parent) {
+    // Entity picker
+    this._entityForm = document.createElement("ha-form");
+    this._entityForm.schema = ENTITY_PICKER_SCHEMA;
+    this._entityForm.computeLabel = (s) => LABELS[s.name] ?? s.name;
+    this._entityForm.data = { entity: this._config.entity ?? "" };
+    this._entityForm.addEventListener("value-changed", (e) => {
+      this._config = { ...this._config, entity: e.detail.value.entity ?? "" };
+      this._emit();
+    });
+    parent.appendChild(this._entityForm);
+
+    // States section
+    const statesSection = document.createElement("div");
+    statesSection.className = "section";
+    statesSection.innerHTML = `
+      <h4>State mapping</h4>
+      <p class="hint">One row per state value. Each row controls what the pill looks like when the entity is in that state.</p>
+      <div class="states-rows"></div>
+      <button type="button" class="add-state">+ Add state</button>
+    `;
+    parent.appendChild(statesSection);
+    this._statesRowsContainer = statesSection.querySelector(".states-rows");
+    statesSection.querySelector(".add-state").addEventListener("click", () => this._addState());
+    this._renderStatesRows();
+
+    // Fallback section
+    const fallbackSection = document.createElement("div");
+    fallbackSection.className = "section";
+    fallbackSection.innerHTML = `
+      <h4>Fallback</h4>
+      <p class="hint">Shown when the current state isn't in the mapping above.</p>
+    `;
+    this._fallbackForm = document.createElement("ha-form");
+    this._fallbackForm.schema = FALLBACK_SCHEMA;
+    this._fallbackForm.computeLabel = (s) => LABELS[s.name] ?? s.name;
+    this._fallbackForm.data = this._config.fallback ?? {};
+    this._fallbackForm.addEventListener("value-changed", (e) => {
+      this._config = { ...this._config, fallback: { ...this._config.fallback, ...e.detail.value } };
+      this._emit();
+    });
+    fallbackSection.appendChild(this._fallbackForm);
+    parent.appendChild(fallbackSection);
+  }
+
+  _addState() {
+    const states = { ...(this._config.states ?? {}) };
+    let key = "new_state";
+    let i = 1;
+    while (key in states) key = `new_state_${++i}`;
+    states[key] = { variant: "info", label: "" };
+    this._config = { ...this._config, states };
+    this._renderStatesRows();
+    this._emit();
+  }
+
+  _removeState(key) {
+    const states = { ...(this._config.states ?? {}) };
+    delete states[key];
+    this._config = { ...this._config, states };
+    this._renderStatesRows();
+    this._emit();
+  }
+
+  _updateState(oldKey, patch) {
+    const states = { ...(this._config.states ?? {}) };
+    const entry = { ...(states[oldKey] ?? {}) };
+    let key = oldKey;
+    if ("state" in patch) {
+      key = patch.state;
+      delete states[oldKey];
+      // If the new key already exists (collision), append suffix
+      let collision = key;
+      let i = 1;
+      while (collision !== oldKey && collision in states) collision = `${key}_${++i}`;
+      key = collision;
+    }
+    if ("variant" in patch) entry.variant = patch.variant;
+    if ("label" in patch) entry.label = patch.label;
+    if ("icon" in patch) entry.icon = patch.icon;
+    states[key] = entry;
+    this._config = { ...this._config, states };
+    this._emit();
+    // Re-render only if the key changed (DOM reflects new ordering)
+    if (key !== oldKey) this._renderStatesRows();
+  }
+
+  _renderStatesRows() {
+    if (!this._statesRowsContainer) return;
+    this._statesRowsContainer.innerHTML = "";
+    const states = this._config.states ?? {};
+    Object.entries(states).forEach(([stateKey, entry]) => {
+      const row = document.createElement("div");
+      row.className = "states-row";
+      row.innerHTML = `
+        <label>State<input type="text" class="state" value="${this._escapeAttr(stateKey)}" placeholder="e.g. on, locked"></label>
+        <label>Variant<select class="variant">
+          ${VARIANT_OPTIONS.map((o) => `<option value="${o.value}"${o.value === (entry.variant ?? "info") ? " selected" : ""}>${o.label}</option>`).join("")}
+        </select></label>
+        <label>Label<input type="text" class="label" value="${this._escapeAttr(entry.label ?? "")}"></label>
+        <label>Icon<input type="text" class="icon" value="${this._escapeAttr(entry.icon ?? "")}" placeholder="mdi:…"></label>
+        <button type="button" class="icon-button remove" title="Remove">×</button>
+      `;
+      row.querySelector(".state").addEventListener("change", (e) => this._updateState(stateKey, { state: e.target.value }));
+      row.querySelector(".variant").addEventListener("change", (e) => this._updateState(stateKey, { variant: e.target.value }));
+      row.querySelector(".label").addEventListener("input", (e) => this._updateState(stateKey, { label: e.target.value }));
+      row.querySelector(".icon").addEventListener("input", (e) => this._updateState(stateKey, { icon: e.target.value }));
+      row.querySelector(".remove").addEventListener("click", () => this._removeState(stateKey));
+      this._statesRowsContainer.appendChild(row);
+    });
+  }
+
+  _escapeAttr(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[c]));
   }
 }
 
@@ -206,7 +463,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.2.0 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.3.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
