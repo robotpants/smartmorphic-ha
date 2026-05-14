@@ -2,14 +2,16 @@
 // Smartmorphic — light card
 //
 // Custom Lovelace card for a light entity. Collapsed: neumorphic well, icon,
-// name, on/off + brightness secondary. Tap toggles. Hold-press (500ms) expands
-// to reveal brightness and color-temp sliders inline (no modal).
+// name, on/off + brightness secondary. Tap toggles. Hold-press (500ms)
+// expands to reveal brightness and color-temp sliders inline (no modal).
 //
 // Config:
 //   type: custom:smartmorphic-light-card
 //   entity: light.living_room
 //   name: Living Room       # optional, defaults to friendly_name
 //   icon: mdi:floor-lamp    # optional, defaults to entity icon or mdi:lightbulb
+//
+// Style aligned to design_handoff_smartmorphic_theme (see style-guide branch).
 // =============================================================================
 
 const HOLD_MS = 500;
@@ -168,105 +170,118 @@ class SmartmorphicLightCard extends HTMLElement {
       :host { display: block; }
       .card {
         background: var(--smartmorphic-surface, var(--ha-card-background, var(--card-background-color)));
-        border-radius: var(--smartmorphic-radius, 18px);
+        border-radius: var(--smartmorphic-radius, 16px);
         box-shadow: var(--smartmorphic-neu-raised,
-          6px 6px 14px rgba(0,0,0,0.22),
-          -6px -6px 14px rgba(255,255,255,0.05));
+          3px 3px 8px rgba(0,0,0,0.22),
+          -3px -3px 8px rgba(255,255,255,0.04));
         padding: var(--smartmorphic-space-5, 16px);
         transition: box-shadow var(--smartmorphic-transition-base, 180ms ease);
         user-select: none;
       }
       .header {
         display: grid;
-        grid-template-columns: auto 1fr auto;
-        grid-template-areas: "icon text dot";
+        grid-template-columns: auto 1fr;
+        grid-template-areas: "icon text";
         align-items: center;
-        gap: var(--smartmorphic-space-4, 14px);
+        gap: var(--smartmorphic-space-4, 12px);
         cursor: pointer;
       }
       .icon-well {
         grid-area: icon;
-        width: 44px;
-        height: 44px;
-        border-radius: var(--smartmorphic-radius-sm, 12px);
+        width: 38px;
+        height: 38px;
+        border-radius: var(--smartmorphic-radius-md, 12px);
         display: grid;
         place-items: center;
-        box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0,0,0,0.25),
-          inset -3px -3px 6px rgba(255,255,255,0.06));
-        color: var(--primary-text-color);
-        transition: color var(--smartmorphic-transition-base, 180ms ease);
+        background: var(--smartmorphic-off-tint, rgba(125,128,146,0.10));
+        color: var(--secondary-text-color);
+        transition:
+          background var(--smartmorphic-transition-base, 180ms ease),
+          box-shadow var(--smartmorphic-transition-base, 180ms ease),
+          color var(--smartmorphic-transition-base, 180ms ease);
       }
-      .icon-well ha-icon { --mdc-icon-size: 22px; }
+      .icon-well ha-icon { --mdc-icon-size: 20px; }
+      .card.on .icon-well {
+        background: var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          0 0 0 1px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
+        color: var(--smartmorphic-accent, #e8653a);
+      }
       .text { grid-area: text; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
       .name {
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-weight: 600; font-size: 1rem; color: var(--primary-text-color);
+        font-weight: 600; font-size: 14px; line-height: 1.2;
+        color: var(--primary-text-color);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: color var(--smartmorphic-transition-base, 180ms ease);
       }
+      .card.on .name { color: var(--smartmorphic-accent, #e8653a); }
       .secondary {
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-size: 0.8rem; color: var(--secondary-text-color);
+        font-weight: 500; font-size: 11px; line-height: 1.4;
+        color: var(--secondary-text-color);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
-      .ember {
-        grid-area: dot;
-        width: 10px; height: 10px; border-radius: 50%;
-        background: var(--smartmorphic-accent, #e8653a);
-        box-shadow: 0 0 12px var(--smartmorphic-accent-glow-tight, rgba(232,101,58,0.55));
-        opacity: 0; transform: scale(0.6);
-        transition:
-          opacity var(--smartmorphic-transition-slow, 220ms ease),
-          transform var(--smartmorphic-transition-slow, 220ms ease);
-      }
-      .card.on .ember { opacity: 1; transform: scale(1); }
-      .card.on .icon-well { color: var(--smartmorphic-accent, #e8653a); }
 
       .panel {
-        margin-top: var(--smartmorphic-space-4, 14px);
-        padding-top: var(--smartmorphic-space-4, 14px);
-        border-top: 1px solid var(--divider-color, rgba(127,127,127,0.18));
-        display: flex; flex-direction: column; gap: var(--smartmorphic-space-4, 14px);
+        margin-top: var(--smartmorphic-space-4, 12px);
+        padding-top: var(--smartmorphic-space-4, 12px);
+        border-top: 1px solid var(--divider-color, rgba(125,128,146,0.10));
+        display: flex; flex-direction: column; gap: var(--smartmorphic-space-4, 12px);
       }
       .row { display: flex; flex-direction: column; gap: var(--smartmorphic-space-2, 6px); }
       .row-label {
         display: flex; justify-content: space-between;
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-size: 0.78rem; color: var(--secondary-text-color);
+        font-weight: 500; font-size: 11px;
+        color: var(--secondary-text-color);
+      }
+      .row-label .value {
+        font-family: var(--smartmorphic-font-mono, 'JetBrains Mono', monospace);
+        letter-spacing: 0.5px;
       }
       input[type="range"] {
         -webkit-appearance: none; appearance: none;
-        width: 100%; height: 28px; background: transparent;
+        width: 100%; height: 22px; background: transparent;
         cursor: pointer;
       }
       input[type="range"]::-webkit-slider-runnable-track {
-        height: 14px; border-radius: 999px;
+        height: 8px; border-radius: 999px;
         box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0,0,0,0.25),
-          inset -3px -3px 6px rgba(255,255,255,0.06));
+          inset 2px 2px 4px rgba(0,0,0,0.25),
+          inset -2px -2px 4px rgba(255,255,255,0.05));
         background: var(--smartmorphic-surface, var(--ha-card-background));
       }
       input[type="range"]::-moz-range-track {
-        height: 14px; border-radius: 999px;
+        height: 8px; border-radius: 999px;
         box-shadow: var(--smartmorphic-neu-pressed,
-          inset 3px 3px 6px rgba(0,0,0,0.25),
-          inset -3px -3px 6px rgba(255,255,255,0.06));
+          inset 2px 2px 4px rgba(0,0,0,0.25),
+          inset -2px -2px 4px rgba(255,255,255,0.05));
         background: var(--smartmorphic-surface, var(--ha-card-background));
       }
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none; appearance: none;
-        width: 22px; height: 22px; border-radius: 50%;
-        background: var(--smartmorphic-accent, #e8653a);
-        box-shadow: 0 0 10px var(--smartmorphic-accent-glow-tight, rgba(232,101,58,0.55));
-        margin-top: -4px;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #ffffff;
+        box-shadow:
+          1px 1px 3px rgba(0,0,0,0.25),
+          0 0 0 1px rgba(232,101,58,0.35);
+        margin-top: -5px;
         border: none;
+        transition: transform 120ms ease;
       }
       input[type="range"]::-moz-range-thumb {
-        width: 22px; height: 22px; border-radius: 50%;
-        background: var(--smartmorphic-accent, #e8653a);
-        box-shadow: 0 0 10px var(--smartmorphic-accent-glow-tight, rgba(232,101,58,0.55));
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #ffffff;
+        box-shadow:
+          1px 1px 3px rgba(0,0,0,0.25),
+          0 0 0 1px rgba(232,101,58,0.35);
         border: none;
+        transition: transform 120ms ease;
       }
+      input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
+      input[type="range"]:active::-moz-range-thumb { transform: scale(1.15); }
     `;
 
     this.shadowRoot.innerHTML = `
@@ -278,15 +293,14 @@ class SmartmorphicLightCard extends HTMLElement {
             <div class="name"></div>
             <div class="secondary"></div>
           </div>
-          <div class="ember"></div>
         </div>
         <div class="panel" hidden>
           <div class="row brightness-row">
-            <div class="row-label"><span>Brightness</span><span class="brightness-value"></span></div>
+            <div class="row-label"><span>Brightness</span><span class="value brightness-value"></span></div>
             <input class="brightness" type="range" min="1" max="100" value="50" />
           </div>
           <div class="row temp-row" hidden>
-            <div class="row-label"><span>Color temperature</span><span class="temp-value"></span></div>
+            <div class="row-label"><span>Color temperature</span><span class="value temp-value"></span></div>
             <input class="temp" type="range" min="2000" max="6500" value="3000" />
           </div>
         </div>
@@ -432,12 +446,12 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-light-card",
   name: "Smartmorphic Light Card",
-  description: "Neumorphic light tile. Tap toggles, hold expands to brightness + color temp.",
+  description: "Light tile. Tap toggles, hold expands to brightness + color temp.",
   preview: false,
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.3.3 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.4.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
