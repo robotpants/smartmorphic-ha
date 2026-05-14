@@ -240,7 +240,16 @@ class SmartmorphicRoomCard extends HTMLElement {
   }
 }
 
-customElements.define("smartmorphic-room-card", SmartmorphicRoomCard);
+if (customElements.get("smartmorphic-room-card")) {
+  console.warn("[smartmorphic-room-card] already registered, skipping re-define");
+} else {
+  try {
+    customElements.define("smartmorphic-room-card", SmartmorphicRoomCard);
+  } catch (e) {
+    console.error("[smartmorphic-room-card] define threw:", e);
+  }
+}
+console.info("[smartmorphic-room-card] post-define get:", customElements.get("smartmorphic-room-card") ? "REGISTERED" : "NOT FOUND");
 
 // =============================================================================
 // Visual editor
@@ -294,7 +303,15 @@ class SmartmorphicRoomCardEditor extends HTMLElement {
   }
 }
 
-customElements.define("smartmorphic-room-card-editor", SmartmorphicRoomCardEditor);
+if (customElements.get("smartmorphic-room-card-editor")) {
+  console.warn("[smartmorphic-room-card-editor] already registered, skipping re-define");
+} else {
+  try {
+    customElements.define("smartmorphic-room-card-editor", SmartmorphicRoomCardEditor);
+  } catch (e) {
+    console.error("[smartmorphic-room-card-editor] define threw:", e);
+  }
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -305,7 +322,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-ROOM-CARD %c v0.3.0 ",
+  "%c SMARTMORPHIC-ROOM-CARD %c v0.3.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
