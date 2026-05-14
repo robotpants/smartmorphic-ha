@@ -62,6 +62,10 @@ class SmartmorphicStatusPill extends HTMLElement {
     return { variant: "ok", label: "All clear", icon: "mdi:check-circle" };
   }
 
+  static getConfigElement() {
+    return document.createElement("smartmorphic-status-pill-editor");
+  }
+
   _resolved() {
     if (this._config.entity) {
       const state = this._hass?.states?.[this._config.entity]?.state;
@@ -128,6 +132,71 @@ class SmartmorphicStatusPill extends HTMLElement {
 
 customElements.define("smartmorphic-status-pill", SmartmorphicStatusPill);
 
+// =============================================================================
+// Visual editor — static mode only. Entity-bound configs (with `states` map)
+// must still be edited as YAML; the form will show the static fields.
+// =============================================================================
+const PILL_EDITOR_LABELS = {
+  variant: "Variant",
+  label: "Label",
+  icon: "Icon",
+};
+
+const PILL_EDITOR_SCHEMA = [
+  {
+    name: "variant",
+    required: true,
+    selector: {
+      select: {
+        options: [
+          { value: "ok", label: "OK (green)" },
+          { value: "warning", label: "Warning (amber)" },
+          { value: "alert", label: "Alert (pink)" },
+          { value: "info", label: "Info (blue)" },
+        ],
+        mode: "dropdown",
+      },
+    },
+  },
+  { name: "label", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
+];
+
+class SmartmorphicStatusPillEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...config };
+    this._ensureForm();
+    this._form.data = this._config;
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) this._form.hass = hass;
+  }
+
+  _ensureForm() {
+    if (this._form) return;
+    this._form = document.createElement("ha-form");
+    this._form.schema = PILL_EDITOR_SCHEMA;
+    this._form.computeLabel = (s) => PILL_EDITOR_LABELS[s.name] ?? s.name;
+    this._form.addEventListener("value-changed", (e) => this._valueChanged(e));
+    if (this._hass) this._form.hass = this._hass;
+    this.appendChild(this._form);
+  }
+
+  _valueChanged(e) {
+    const next = { ...this._config, ...e.detail.value };
+    this._config = next;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: next },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+}
+
+customElements.define("smartmorphic-status-pill-editor", SmartmorphicStatusPillEditor);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-status-pill",
@@ -137,7 +206,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.1.0 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.2.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
