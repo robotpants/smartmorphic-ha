@@ -1,8 +1,9 @@
 // =============================================================================
 // Smartmorphic — status pill
 //
-// Custom Lovelace card. Semantic pill (ok / warning / alert / info) with 18%
-// background of the semantic color and darkened text. Static or entity-bound.
+// Custom Lovelace card. Semantic pill (ok / warning / alert / info) with
+// tinted background and full-saturation text per the style-guide Pill recipe.
+// Static or entity-bound.
 //
 // Static:
 //   type: custom:smartmorphic-status-pill
@@ -89,19 +90,24 @@ class SmartmorphicStatusPill extends HTMLElement {
       .pill {
         display: inline-flex;
         align-items: center;
-        gap: var(--smartmorphic-space-3, 8px);
-        padding: var(--smartmorphic-space-3, 8px) var(--smartmorphic-space-4, 14px);
+        gap: 5px;
+        padding: 4px 9px;
         border-radius: var(--smartmorphic-radius-pill, 999px);
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-weight: 600;
-        font-size: 0.85rem;
+        font-weight: 700;
+        font-size: 10px;
         line-height: 1;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
         max-width: 100%;
         background: var(--pill-bg, transparent);
         color: var(--pill-fg, var(--primary-text-color));
         box-sizing: border-box;
       }
-      .pill ha-icon { --mdc-icon-size: 18px; flex-shrink: 0; }
+      .pill ha-icon {
+        --mdc-icon-size: 12px;
+        flex-shrink: 0;
+      }
       .label {
         white-space: nowrap;
         overflow: hidden;
@@ -122,8 +128,9 @@ class SmartmorphicStatusPill extends HTMLElement {
     const { variant, label, icon } = this._resolved();
     const v = VARIANTS[variant] ?? VARIANTS.info;
     const pill = this.shadowRoot.querySelector(".pill");
-    pill.style.setProperty("--pill-bg", `color-mix(in srgb, ${v.color} 18%, transparent)`);
-    pill.style.setProperty("--pill-fg", `color-mix(in srgb, ${v.color} 70%, var(--primary-text-color))`);
+    // Style guide: pill bg is 14-16% tinted, text is full saturation
+    pill.style.setProperty("--pill-bg", `color-mix(in srgb, ${v.color} 15%, transparent)`);
+    pill.style.setProperty("--pill-fg", v.color);
     this.shadowRoot.querySelector(".label").textContent = label;
     const iconEl = this.shadowRoot.querySelector(".icon");
     iconEl.setAttribute("icon", icon ?? v.icon);
@@ -352,7 +359,6 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
   }
 
   _renderEntity(parent) {
-    // Entity picker
     this._entityForm = document.createElement("ha-form");
     this._entityForm.schema = ENTITY_PICKER_SCHEMA;
     this._entityForm.computeLabel = (s) => LABELS[s.name] ?? s.name;
@@ -363,7 +369,6 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
     });
     parent.appendChild(this._entityForm);
 
-    // States section
     const statesSection = document.createElement("div");
     statesSection.className = "section";
     statesSection.innerHTML = `
@@ -377,7 +382,6 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
     statesSection.querySelector(".add-state").addEventListener("click", () => this._addState());
     this._renderStatesRows();
 
-    // Fallback section
     const fallbackSection = document.createElement("div");
     fallbackSection.className = "section";
     fallbackSection.innerHTML = `
@@ -422,7 +426,6 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
     if ("state" in patch) {
       key = patch.state;
       delete states[oldKey];
-      // If the new key already exists (collision), append suffix
       let collision = key;
       let i = 1;
       while (collision !== oldKey && collision in states) collision = `${key}_${++i}`;
@@ -434,7 +437,6 @@ class SmartmorphicStatusPillEditor extends HTMLElement {
     states[key] = entry;
     this._config = { ...this._config, states };
     this._emit();
-    // Re-render only if the key changed (DOM reflects new ordering)
     if (key !== oldKey) this._renderStatesRows();
   }
 
@@ -493,7 +495,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-STATUS-PILL %c v0.4.3 ",
+  "%c SMARTMORPHIC-STATUS-PILL %c v0.5.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
