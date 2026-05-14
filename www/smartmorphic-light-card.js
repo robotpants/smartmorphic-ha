@@ -14,6 +14,42 @@
 // Style aligned to design_handoff_smartmorphic_theme (see style-guide branch).
 // =============================================================================
 
+// =============================================================================
+// Canonical register helper — installs on window so all cards share it.
+// Fixes the picker-spinner regression: HA's card factory uses
+// customElements.whenDefined(tag), but scoped-custom-element-registry
+// (loaded by Mushroom and others via HACS) keeps those promises pending
+// until an instance of the element is upgraded via DOM connection.
+// Briefly appending a probe element triggers the upgrade and resolves
+// the promise so the picker stops spinning.
+// =============================================================================
+if (!window.smartmorphicDefineCard) {
+  window.smartmorphicDefineCard = function (tag, ctor) {
+    if (customElements.get(tag)) return;
+    try {
+      customElements.define(tag, ctor);
+    } catch (e) {
+      console.error("[" + tag + "] define threw:", e);
+      return;
+    }
+    const probe = () => {
+      try {
+        if (!document.body) return;
+        const el = document.createElement(tag);
+        el.style.cssText =
+          "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
+        document.body.appendChild(el);
+        Promise.resolve().then(() => el.remove());
+      } catch (_) {
+        // best-effort
+      }
+    };
+    if (document.body) probe();
+    else document.addEventListener("DOMContentLoaded", probe, { once: true });
+    console.info("[" + tag + "] registered");
+  };
+}
+
 const HOLD_MS = 500;
 
 class SmartmorphicLightCard extends HTMLElement {
@@ -361,29 +397,7 @@ class SmartmorphicLightCard extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-light-card")) {
-  console.warn("[smartmorphic-light-card] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-light-card", SmartmorphicLightCard);
-  } catch (e) {
-    console.error("[smartmorphic-light-card] define threw:", e);
-  }
-}
-console.info("[smartmorphic-light-card] post-define get:", customElements.get("smartmorphic-light-card") ? "REGISTERED" : "NOT FOUND");
-
-if (!window.__smartmorphicUpgradeScheduled) {
-  window.__smartmorphicUpgradeScheduled = true;
-  setTimeout(() => {
-    try {
-      if (typeof customElements.upgrade === "function") {
-        customElements.upgrade(document);
-      }
-    } catch (e) {
-      console.warn("[smartmorphic] document upgrade failed:", e);
-    }
-  }, 0);
-}
+window.smartmorphicDefineCard("smartmorphic-light-card", SmartmorphicLightCard);
 
 // =============================================================================
 // Visual editor — uses HA's built-in <ha-form> for entity + icon pickers.
@@ -433,16 +447,7 @@ class SmartmorphicLightCardEditor extends HTMLElement {
   }
 }
 
-if (customElements.get("smartmorphic-light-card-editor")) {
-  console.warn("[smartmorphic-light-card-editor] already registered, skipping re-define");
-} else {
-  try {
-    customElements.define("smartmorphic-light-card-editor", SmartmorphicLightCardEditor);
-  } catch (e) {
-    console.error("[smartmorphic-light-card-editor] define threw:", e);
-  }
-}
-
+window.smartmorphicDefineCard("smartmorphic-light-card-editor", SmartmorphicLightCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-light-card",
@@ -452,7 +457,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.4.3 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.5.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
