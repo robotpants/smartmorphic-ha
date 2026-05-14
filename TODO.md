@@ -15,7 +15,6 @@ Build Lit web components for the highest-traffic surfaces, consuming the `--smar
 - [ ] **Markdown card subtitle treatment** — give the secondary text under headings a tighter eyebrow style without affecting all markdown.
 - [ ] **Active-state detection on tile icons** — current glow is always-on; ideally fades off for `unavailable` / `unknown` states.
 - [ ] **Energy dashboard restyle** — HA's energy view has its own quirks; needs targeted card-mod selectors.
-- [ ] **Self-hosted fonts variant** — pre-built `smartmorphic-fonts.js` that references `/local/fonts/*` for users who want to avoid Google Fonts CDN.
 
 ## Tooling / packaging
 

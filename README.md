@@ -81,16 +81,23 @@ theme-only changes; restart if `smartmorphic-fonts.js` changed).
 ### Self-hosted fonts
 
 The repo bundles variable-font TTFs for DM Sans and JetBrains Mono in
-`www/fonts/` for users who want to avoid the Google Fonts CDN. To use
-them, symlink the fonts dir alongside the loader:
+`www/fonts/`, plus a drop-in loader (`smartmorphic-fonts-local.js`) that
+serves them from `/local/fonts/` instead of the Google CDN. Use it when
+you want to avoid third-party requests or run HA offline.
+
+Swap the symlinks:
 
 ```bash
 ln -sf /config/smartmorphic-ha/www/fonts /config/www/fonts
+ln -sfn /config/smartmorphic-ha/www/smartmorphic-fonts-local.js /config/www/smartmorphic-fonts.js
 ```
 
-Then replace `www/smartmorphic-fonts.js` with a version that declares
-`@font-face` rules pointing at `/local/fonts/*.ttf`. (Outfit isn't
-bundled — grab it from Google Fonts if you go fully self-hosted.)
+The `configuration.yaml` `extra_module_url` entry stays the same. Restart
+HA after the swap.
+
+Outfit (display font) isn't bundled. If you use it, either stick with the
+Google CDN loader or add Outfit TTFs to `www/fonts/` and extend the
+`@font-face` block in `smartmorphic-fonts-local.js`.
 
 ## File layout
 
@@ -103,6 +110,7 @@ smartmorphic-ha/
 │   └── smartmorphic.yaml
 ├── www/
 │   ├── smartmorphic-fonts.js
+│   ├── smartmorphic-fonts-local.js
 │   └── fonts/
 │       ├── DMSans-VariableFont_opsz_wght.ttf
 │       ├── DMSans-Italic-VariableFont_opsz_wght.ttf
