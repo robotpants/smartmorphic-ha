@@ -357,6 +357,14 @@ if (customElements.get("smartmorphic-light-card")) {
 }
 console.info("[smartmorphic-light-card] post-define get:", customElements.get("smartmorphic-light-card") ? "REGISTERED" : "NOT FOUND");
 
+try {
+  if (typeof customElements.upgrade === "function") {
+    customElements.upgrade(document);
+  }
+} catch (e) {
+  console.warn("[smartmorphic-light-card] upgrade nudge failed:", e);
+}
+
 // =============================================================================
 // Visual editor — uses HA's built-in <ha-form> for entity + icon pickers.
 // =============================================================================
@@ -424,7 +432,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.3.1 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.3.2 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
