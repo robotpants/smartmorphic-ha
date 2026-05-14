@@ -25,6 +25,30 @@ When building or editing custom Lovelace cards in `www/`:
 - **CSS fallbacks must survive the editor preview's missing theme.** The card-picker modal does not inherit the dashboard theme, so any `var(--smartmorphic-*, fallback)` fallback gets used as-is. Pick fallback shadow/color values that look acceptable on both light and dark backgrounds (mostly: low-opacity blacks + very low-opacity whites, not the high-opacity whites the theme actually uses in light mode).
 - **Bump the `console.info` version banner on every functional change** so it's obvious when a browser is serving a stale cached copy.
 - **Every new custom card MUST ship with a functional visual editor.** Implement `static getConfigElement()` returning a custom element. The editor must cover every config field the card actually supports — wrap `<ha-form>` with a schema for the simple parts, build inline DOM widgets for anything `<ha-form>` can't express (variable-key dicts, repeating rows, conditional sections). Falling back to "edit YAML for this part" doesn't count as supported.
+- **Register via `window.smartmorphicDefineCard(tag, ctor)`, never bare `customElements.define`.** Each card file must inline-install the helper at the top:
+
+  ```js
+  if (!window.smartmorphicDefineCard) {
+    window.smartmorphicDefineCard = function (tag, ctor) {
+      if (customElements.get(tag)) return;
+      try { customElements.define(tag, ctor); }
+      catch (e) { console.error("[" + tag + "] define threw:", e); return; }
+      const probe = () => {
+        try {
+          if (!document.body) return;
+          const el = document.createElement(tag);
+          el.style.cssText = "display:none !important;position:absolute;visibility:hidden;pointer-events:none;";
+          document.body.appendChild(el);
+          Promise.resolve().then(() => el.remove());
+        } catch (_) {}
+      };
+      if (document.body) probe(); else document.addEventListener("DOMContentLoaded", probe, { once: true });
+      console.info("[" + tag + "] registered");
+    };
+  }
+  ```
+
+  Why: `scoped-custom-element-registry` (loaded by Mushroom HACS) keeps `customElements.whenDefined()` promises pending until an instance of the tag is upgraded via DOM connection. HA's card-picker uses `whenDefined()` — without the probe, the picker spins forever even though `customElements.get()` returns the class. The helper attaches a hidden probe element briefly to trigger the upgrade lifecycle, then removes it. Apply the helper to BOTH the card class and its editor class. Do not also call `customElements.upgrade(document)` in a setTimeout — the per-card probe replaces that earlier workaround.
 
 ## Visual style direction
 
