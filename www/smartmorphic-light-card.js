@@ -1,57 +1,37 @@
 // =============================================================================
-// Smartmorphic — light card
+// Smartmorphic — light card (LightTileCard recipe)
 //
-// Custom Lovelace card for a light entity. Collapsed: neumorphic well, icon,
-// name, on/off + brightness secondary. Tap toggles. Hold-press (500ms)
-// expands to reveal brightness and color-temp sliders inline (no modal).
+// Tile + inline brightness control. Layout:
+//   Top row: ActiveIconWell + name/sub + Toggle (44×26 pill)
+//   Below (only when on): sun icon (12px) + thin slider (track 5, knob 11)
+//                         + 10px mono % readout, right-aligned
+//
+// Interactions:
+//   - Tap card body / icon / toggle → light.toggle
+//   - Drag slider → light.turn_on with brightness_pct
+//   - No hold-expand, no color-temp wedge — that lives in the more-info dialog.
 //
 // Config:
 //   type: custom:smartmorphic-light-card
 //   entity: light.living_room
 //   name: Living Room       # optional, defaults to friendly_name
 //   icon: mdi:floor-lamp    # optional, defaults to entity icon or mdi:lightbulb
+//   sub: "Pendant"          # optional secondary label (defaults to area name)
 //
 // Style aligned to design_handoff_smartmorphic_theme (see style-guide branch).
 // =============================================================================
 
-// =============================================================================
-// Canonical register helper — installs on window so all cards share it.
-//
-// THE problem (diagnosed via live console state):
-//   1. Our scripts load via extra_module_url and call customElements.define().
-//   2. At that moment, customElements is the NATIVE CustomElementRegistry —
-//      our class registers there fine.
-//   3. Mushroom HACS loads AFTER us and brings the
-//      scoped-custom-element-registry polyfill, which REPLACES
-//      window.customElements with its own fresh, empty registry.
-//   4. Polyfill does NOT adopt definitions that existed on the native registry.
-//   5. HA's create-element-base uses the new (polyfilled) customElements and
-//      sees no smartmorphic-* tags → "Custom element not found".
-//
-// Fix: poll customElements.get(tag) and re-define if missing. Idempotent —
-// each call either succeeds, or no-ops if our class is already registered
-// in the current registry. Stops polling after 30s.
-// =============================================================================
 if (!window.smartmorphicDefineCard) {
   window.smartmorphicDefineCard = function (tag, ctor) {
     const tryRegister = () => {
       const existing = customElements.get(tag);
       if (existing === ctor) return true;
-      if (existing) {
-        // Another class already claims this tag — leave it alone.
-        return true;
-      }
-      try {
-        customElements.define(tag, ctor);
-        return true;
-      } catch (_) {
-        return false;
-      }
+      if (existing) return true;
+      try { customElements.define(tag, ctor); return true; }
+      catch (_) { return false; }
     };
     tryRegister();
     console.info("[" + tag + "] registered");
-    // Re-register if the registry gets replaced (e.g. by Mushroom's polyfill
-    // loading after us). Cheap poll, stops after 30s.
     let elapsed = 0;
     const interval = setInterval(() => {
       elapsed += 500;
@@ -68,8 +48,6 @@ if (!window.smartmorphicDefineCard) {
   };
 }
 
-const HOLD_MS = 500;
-
 class SmartmorphicLightCard extends HTMLElement {
   constructor() {
     super();
@@ -77,9 +55,7 @@ class SmartmorphicLightCard extends HTMLElement {
     this._config = null;
     this._hass = null;
     this._rendered = false;
-    this._expanded = false;
-    this._holdTimer = null;
-    this._suppressClick = false;
+    this._dragging = false;
   }
 
   setConfig(config) {
@@ -101,7 +77,7 @@ class SmartmorphicLightCard extends HTMLElement {
   }
 
   getCardSize() {
-    return this._expanded ? 4 : 2;
+    return 1;
   }
 
   static getStubConfig(hass) {
@@ -126,6 +102,12 @@ class SmartmorphicLightCard extends HTMLElement {
     return this._stateObj()?.attributes?.friendly_name ?? this._config.entity;
   }
 
+  _sub() {
+    if (this._config.sub != null) return this._config.sub;
+    const s = this._stateObj();
+    return s?.attributes?.area_id ?? "";
+  }
+
   _icon() {
     if (this._config.icon) return this._config.icon;
     return this._stateObj()?.attributes?.icon ?? "mdi:lightbulb";
@@ -135,31 +117,6 @@ class SmartmorphicLightCard extends HTMLElement {
     const b = this._stateObj()?.attributes?.brightness;
     if (b == null) return 0;
     return Math.round((b / 255) * 100);
-  }
-
-  _supportsColorTemp() {
-    const modes = this._stateObj()?.attributes?.supported_color_modes ?? [];
-    return modes.includes("color_temp");
-  }
-
-  _colorTempKelvin() {
-    return this._stateObj()?.attributes?.color_temp_kelvin ?? null;
-  }
-
-  _kelvinRange() {
-    const s = this._stateObj();
-    return {
-      min: s?.attributes?.min_color_temp_kelvin ?? 2000,
-      max: s?.attributes?.max_color_temp_kelvin ?? 6500,
-    };
-  }
-
-  _secondaryText() {
-    if (!this._config.entity) return "No entity";
-    if (!this._stateObj()) return "Unavailable";
-    if (!this._isOn()) return "Off";
-    const pct = this._brightnessPct();
-    return pct > 0 ? `On · ${pct}%` : "On";
   }
 
   _toggle() {
@@ -173,50 +130,6 @@ class SmartmorphicLightCard extends HTMLElement {
       entity_id: this._config.entity,
       brightness_pct: pct,
     });
-  }
-
-  _setKelvin(k) {
-    if (!this._hass || !this._config.entity) return;
-    this._hass.callService("light", "turn_on", {
-      entity_id: this._config.entity,
-      kelvin: k,
-    });
-  }
-
-  _onPointerDown() {
-    this._suppressClick = false;
-    clearTimeout(this._holdTimer);
-    this._holdTimer = setTimeout(() => {
-      this._suppressClick = true;
-      this._setExpanded(!this._expanded);
-    }, HOLD_MS);
-  }
-
-  _onPointerUp() {
-    clearTimeout(this._holdTimer);
-  }
-
-  _onPointerCancel() {
-    clearTimeout(this._holdTimer);
-  }
-
-  _onClick(e) {
-    if (this._suppressClick) {
-      this._suppressClick = false;
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    this._toggle();
-  }
-
-  _setExpanded(value) {
-    this._expanded = value;
-    const card = this.shadowRoot.querySelector(".card");
-    if (card) card.classList.toggle("expanded", value);
-    const panel = this.shadowRoot.querySelector(".panel");
-    if (panel) panel.hidden = !value;
-    this._update();
   }
 
   _render() {
@@ -234,14 +147,12 @@ class SmartmorphicLightCard extends HTMLElement {
       }
       .header {
         display: grid;
-        grid-template-columns: auto 1fr;
-        grid-template-areas: "icon text";
+        grid-template-columns: auto 1fr auto;
         align-items: center;
         gap: var(--smartmorphic-space-4, 12px);
         cursor: pointer;
       }
       .icon-well {
-        grid-area: icon;
         width: 38px;
         height: 38px;
         border-radius: var(--smartmorphic-radius-md, 12px);
@@ -263,80 +174,132 @@ class SmartmorphicLightCard extends HTMLElement {
           0 0 0 1px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
         color: var(--smartmorphic-accent, #e8653a);
       }
-      .text { grid-area: text; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
       .name {
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-weight: 600; font-size: 14px; line-height: 1.2;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 1.2;
         color: var(--primary-text-color);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         transition: color var(--smartmorphic-transition-base, 180ms ease);
       }
       .card.on .name { color: var(--smartmorphic-accent, #e8653a); }
-      .secondary {
+      .sub {
         font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-weight: 500; font-size: 11px; line-height: 1.4;
+        font-weight: 500;
+        font-size: 11px;
+        line-height: 1.4;
         color: var(--secondary-text-color);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
+      .sub:empty { display: none; }
 
-      .panel {
-        margin-top: var(--smartmorphic-space-4, 12px);
-        padding-top: var(--smartmorphic-space-4, 12px);
-        border-top: 1px solid var(--divider-color, rgba(125,128,146,0.10));
-        display: flex; flex-direction: column; gap: var(--smartmorphic-space-4, 12px);
-      }
-      .row { display: flex; flex-direction: column; gap: var(--smartmorphic-space-2, 6px); }
-      .row-label {
-        display: flex; justify-content: space-between;
-        font-family: var(--smartmorphic-font-body, 'DM Sans', system-ui, sans-serif);
-        font-weight: 500; font-size: 11px;
-        color: var(--secondary-text-color);
-      }
-      .row-label .value {
-        font-family: var(--smartmorphic-font-mono, 'JetBrains Mono', monospace);
-        letter-spacing: 0.5px;
-      }
-      input[type="range"] {
-        -webkit-appearance: none; appearance: none;
-        width: 100%; height: 22px; background: transparent;
+      /* Toggle (44×26 pill, knob 22×22, 2px inset). */
+      .toggle {
+        position: relative;
+        width: 44px;
+        height: 26px;
+        border-radius: 999px;
+        background: var(--smartmorphic-toggle-off, #c4c7d4);
+        flex-shrink: 0;
         cursor: pointer;
+        transition:
+          background var(--smartmorphic-transition-base, 180ms ease),
+          box-shadow var(--smartmorphic-transition-base, 180ms ease);
       }
-      input[type="range"]::-webkit-slider-runnable-track {
-        height: 8px; border-radius: 999px;
-        box-shadow: var(--smartmorphic-neu-pressed,
-          inset 2px 2px 4px rgba(0,0,0,0.25),
-          inset -2px -2px 4px rgba(255,255,255,0.05));
-        background: var(--smartmorphic-surface, var(--ha-card-background));
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.20);
+        transition: transform var(--smartmorphic-transition-base, 180ms ease);
       }
-      input[type="range"]::-moz-range-track {
-        height: 8px; border-radius: 999px;
-        box-shadow: var(--smartmorphic-neu-pressed,
-          inset 2px 2px 4px rgba(0,0,0,0.25),
-          inset -2px -2px 4px rgba(255,255,255,0.05));
-        background: var(--smartmorphic-surface, var(--ha-card-background));
+      .card.on .toggle {
+        background: var(--smartmorphic-accent, #e8653a);
+        box-shadow: 0 0 10px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
       }
-      input[type="range"]::-webkit-slider-thumb {
+      .card.on .toggle::after { transform: translateX(18px); }
+
+      /* Brightness row — only when on. */
+      .bright {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: var(--smartmorphic-space-3, 8px);
+        margin-top: var(--smartmorphic-space-4, 12px);
+      }
+      .sun {
+        --mdc-icon-size: 12px;
+        color: var(--secondary-text-color);
+        display: grid;
+        place-items: center;
+      }
+      .bright-value {
+        font-family: var(--smartmorphic-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+        font-size: 10px;
+        line-height: 1;
+        color: var(--secondary-text-color);
+        min-width: 28px;
+        text-align: right;
+        font-feature-settings: "tnum";
+      }
+
+      /* Slider — 5px track, 11px knob. */
+      input[type="range"].slider {
         -webkit-appearance: none; appearance: none;
-        width: 18px; height: 18px; border-radius: 50%;
-        background: #ffffff;
+        width: 100%;
+        height: 18px;            /* hit target */
+        background: transparent;
+        cursor: pointer;
+        margin: 0;
+        padding: 0;
+      }
+      input[type="range"].slider::-webkit-slider-runnable-track {
+        height: 5px;
+        border-radius: 999px;
+        background: var(--smartmorphic-surface, var(--ha-card-background));
+        box-shadow: var(--smartmorphic-neu-pressed,
+          inset 2px 2px 4px rgba(0,0,0,0.25),
+          inset -2px -2px 4px rgba(255,255,255,0.05));
+      }
+      input[type="range"].slider::-moz-range-track {
+        height: 5px;
+        border-radius: 999px;
+        background: var(--smartmorphic-surface, var(--ha-card-background));
+        box-shadow: var(--smartmorphic-neu-pressed,
+          inset 2px 2px 4px rgba(0,0,0,0.25),
+          inset -2px -2px 4px rgba(255,255,255,0.05));
+      }
+      input[type="range"].slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 11px; height: 11px;
+        border-radius: 50%;
+        background: #fff;
         box-shadow:
           1px 1px 3px rgba(0,0,0,0.25),
-          0 0 0 1px rgba(232,101,58,0.35);
-        margin-top: -5px;
+          0 0 0 1px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
+        margin-top: -3px;  /* (5 - 11) / 2 */
         border: none;
         transition: transform 120ms ease;
       }
-      input[type="range"]::-moz-range-thumb {
-        width: 18px; height: 18px; border-radius: 50%;
-        background: #ffffff;
+      input[type="range"].slider::-moz-range-thumb {
+        width: 11px; height: 11px;
+        border-radius: 50%;
+        background: #fff;
         box-shadow:
           1px 1px 3px rgba(0,0,0,0.25),
-          0 0 0 1px rgba(232,101,58,0.35);
+          0 0 0 1px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
         border: none;
         transition: transform 120ms ease;
       }
-      input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
-      input[type="range"]:active::-moz-range-thumb { transform: scale(1.15); }
+      input[type="range"].slider:active::-webkit-slider-thumb { transform: scale(1.25); }
+      input[type="range"].slider:active::-moz-range-thumb { transform: scale(1.25); }
     `;
 
     this.shadowRoot.innerHTML = `
@@ -346,37 +309,37 @@ class SmartmorphicLightCard extends HTMLElement {
           <div class="icon-well"><ha-icon icon="${this._icon()}"></ha-icon></div>
           <div class="text">
             <div class="name"></div>
-            <div class="secondary"></div>
+            <div class="sub"></div>
           </div>
+          <div class="toggle" role="switch" aria-checked="false"></div>
         </div>
-        <div class="panel" hidden>
-          <div class="row brightness-row">
-            <div class="row-label"><span>Brightness</span><span class="value brightness-value"></span></div>
-            <input class="brightness" type="range" min="1" max="100" value="50" />
-          </div>
-          <div class="row temp-row" hidden>
-            <div class="row-label"><span>Color temperature</span><span class="value temp-value"></span></div>
-            <input class="temp" type="range" min="2000" max="6500" value="3000" />
-          </div>
+        <div class="bright" hidden>
+          <div class="sun"><ha-icon icon="mdi:white-balance-sunny"></ha-icon></div>
+          <input class="slider" type="range" min="1" max="100" value="50"
+                 aria-label="Brightness" />
+          <div class="bright-value">0%</div>
         </div>
       </div>
     `;
 
     const header = this.shadowRoot.querySelector(".header");
-    header.addEventListener("pointerdown", () => this._onPointerDown());
-    header.addEventListener("pointerup", () => this._onPointerUp());
-    header.addEventListener("pointerleave", () => this._onPointerCancel());
-    header.addEventListener("pointercancel", () => this._onPointerCancel());
-    header.addEventListener("click", (e) => this._onClick(e));
+    header.addEventListener("click", () => this._toggle());
     header.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._toggle(); }
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this._toggle();
+      }
     });
 
-    const bSlider = this.shadowRoot.querySelector(".brightness");
-    bSlider.addEventListener("change", (e) => this._setBrightness(Number(e.target.value)));
-
-    const tSlider = this.shadowRoot.querySelector(".temp");
-    tSlider.addEventListener("change", (e) => this._setKelvin(Number(e.target.value)));
+    const slider = this.shadowRoot.querySelector(".slider");
+    slider.addEventListener("input", (e) => {
+      this._dragging = true;
+      this.shadowRoot.querySelector(".bright-value").textContent = `${e.target.value}%`;
+    });
+    slider.addEventListener("change", (e) => {
+      this._dragging = false;
+      this._setBrightness(Number(e.target.value));
+    });
 
     this._update();
   }
@@ -386,31 +349,24 @@ class SmartmorphicLightCard extends HTMLElement {
     if (!card) return;
     const on = this._isOn();
     card.classList.toggle("on", on);
+
     this.shadowRoot.querySelector(".name").textContent = this._name();
-    this.shadowRoot.querySelector(".secondary").textContent = this._secondaryText();
+    this.shadowRoot.querySelector(".sub").textContent = this._sub();
 
     const iconEl = this.shadowRoot.querySelector(".icon-well ha-icon");
     if (iconEl) iconEl.setAttribute("icon", this._icon());
 
-    if (this._expanded) {
-      const pct = this._brightnessPct() || 50;
-      const bSlider = this.shadowRoot.querySelector(".brightness");
-      if (document.activeElement !== bSlider) bSlider.value = String(pct);
-      this.shadowRoot.querySelector(".brightness-value").textContent = `${pct}%`;
+    const toggle = this.shadowRoot.querySelector(".toggle");
+    toggle.setAttribute("aria-checked", on ? "true" : "false");
 
-      const tempRow = this.shadowRoot.querySelector(".temp-row");
-      if (this._supportsColorTemp()) {
-        tempRow.hidden = false;
-        const range = this._kelvinRange();
-        const tSlider = this.shadowRoot.querySelector(".temp");
-        tSlider.min = String(range.min);
-        tSlider.max = String(range.max);
-        const k = this._colorTempKelvin() ?? Math.round((range.min + range.max) / 2);
-        if (document.activeElement !== tSlider) tSlider.value = String(k);
-        this.shadowRoot.querySelector(".temp-value").textContent = `${k}K`;
-      } else {
-        tempRow.hidden = true;
-      }
+    const bright = this.shadowRoot.querySelector(".bright");
+    bright.hidden = !on;
+
+    if (on && !this._dragging) {
+      const pct = this._brightnessPct() || 1;
+      const slider = this.shadowRoot.querySelector(".slider");
+      if (document.activeElement !== slider) slider.value = String(pct);
+      this.shadowRoot.querySelector(".bright-value").textContent = `${pct}%`;
     }
   }
 }
@@ -424,12 +380,14 @@ const LIGHT_EDITOR_LABELS = {
   entity: "Light entity",
   name: "Name (optional)",
   icon: "Icon (optional)",
+  sub: "Sub-label (optional)",
 };
 
 const LIGHT_EDITOR_SCHEMA = [
   { name: "entity", required: true, selector: { entity: { domain: "light" } } },
   { name: "name", selector: { text: {} } },
   { name: "icon", selector: { icon: {} } },
+  { name: "sub", selector: { text: {} } },
 ];
 
 class SmartmorphicLightCardEditor extends HTMLElement {
@@ -470,12 +428,12 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "smartmorphic-light-card",
   name: "Smartmorphic Light Card",
-  description: "Light tile. Tap toggles, hold expands to brightness + color temp.",
+  description: "Light tile with inline brightness slider (LightTileCard recipe).",
   preview: false,
 });
 
 console.info(
-  "%c SMARTMORPHIC-LIGHT-CARD %c v0.5.2 ",
+  "%c SMARTMORPHIC-LIGHT-CARD %c v0.6.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
