@@ -36,6 +36,39 @@ views:
               ## Good {{ 'morning' if now().hour < 12 else 'afternoon' if now().hour < 18 else 'evening' }}
               {{ states('sensor.REPLACE_ME_outdoor_temp') }}° outside · {{ states('weather.REPLACE_ME_home') }}
 
+          # Theme tester — three chips force the theme mode without changing
+          # system settings. Useful during styling work; remove for production.
+          - type: custom:mushroom-chips-card
+            alignment: end
+            chips:
+              - type: template
+                icon: mdi:white-balance-sunny
+                content: Light
+                tap_action:
+                  action: call-service
+                  service: frontend.set_theme
+                  data:
+                    name: Smartmorphic
+                    mode: light
+              - type: template
+                icon: mdi:weather-night
+                content: Dark
+                tap_action:
+                  action: call-service
+                  service: frontend.set_theme
+                  data:
+                    name: Smartmorphic
+                    mode: dark
+              - type: template
+                icon: mdi:theme-light-dark
+                content: Auto
+                tap_action:
+                  action: call-service
+                  service: frontend.set_theme
+                  data:
+                    name: Smartmorphic
+                    mode: auto
+
           - type: horizontal-stack
             cards:
               - type: custom:mushroom-chips-card
