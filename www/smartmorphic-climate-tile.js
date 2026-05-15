@@ -525,6 +525,10 @@ window.customCards.push({
   preview: false,
 });
 
+window.smartmorphic = window.smartmorphic || {};
+window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.versions["smartmorphic-climate-tile"] = "0.1.1";
+
 console.info(
   "%c SMARTMORPHIC-CLIMATE-TILE %c v0.1.1 ",
   "color: white; background: #e8653a; font-weight: 700;",

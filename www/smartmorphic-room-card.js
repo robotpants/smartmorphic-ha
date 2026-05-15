@@ -353,6 +353,10 @@ window.customCards.push({
   preview: false,
 });
 
+window.smartmorphic = window.smartmorphic || {};
+window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.versions["smartmorphic-room-card"] = "0.5.2";
+
 console.info(
   "%c SMARTMORPHIC-ROOM-CARD %c v0.5.2 ",
   "color: white; background: #e8653a; font-weight: 700;",

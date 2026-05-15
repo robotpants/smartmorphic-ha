@@ -357,6 +357,10 @@ window.customCards.push({
   preview: false,
 });
 
+window.smartmorphic = window.smartmorphic || {};
+window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.versions["smartmorphic-sensor-tile"] = "0.1.3";
+
 console.info(
   "%c SMARTMORPHIC-SENSOR-TILE %c v0.1.3 ",
   "color: white; background: #e8653a; font-weight: 700;",

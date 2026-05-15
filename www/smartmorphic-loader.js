@@ -20,7 +20,7 @@
 // script rewrites that line on every commit.
 // =============================================================================
 
-const VERSION = "3a34c21-20260515203043";
+const VERSION = "55d9c59-20260515222507";
 
 const FILES = [
   "smartmorphic-fonts",
@@ -32,11 +32,13 @@ const FILES = [
   "smartmorphic-climate-tile",
   "smartmorphic-automation-row",
   "smartmorphic-scene-chip",
+  "smartmorphic-diagnostics-card",
 ];
 
 window.smartmorphic = window.smartmorphic || {};
 window.smartmorphic.loaderVersion = VERSION;
 window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.expectedCards = FILES.filter((f) => f !== "smartmorphic-fonts" && f !== "smartmorphic-fonts-local");
 window.smartmorphic.loadedAt = new Date().toISOString();
 
 console.info(

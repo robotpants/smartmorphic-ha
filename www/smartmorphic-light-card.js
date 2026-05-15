@@ -432,6 +432,10 @@ window.customCards.push({
   preview: false,
 });
 
+window.smartmorphic = window.smartmorphic || {};
+window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.versions["smartmorphic-light-card"] = "0.6.0";
+
 console.info(
   "%c SMARTMORPHIC-LIGHT-CARD %c v0.6.0 ",
   "color: white; background: #e8653a; font-weight: 700;",

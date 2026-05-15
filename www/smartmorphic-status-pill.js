@@ -517,6 +517,10 @@ window.customCards.push({
   preview: false,
 });
 
+window.smartmorphic = window.smartmorphic || {};
+window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.versions["smartmorphic-status-pill"] = "0.6.2";
+
 console.info(
   "%c SMARTMORPHIC-STATUS-PILL %c v0.6.2 ",
   "color: white; background: #e8653a; font-weight: 700;",

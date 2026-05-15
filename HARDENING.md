@@ -5,7 +5,7 @@ Before any new cards or style work lands, the loading pipeline gets bulletproofe
 ## Status
 
 - [x] **Phase 1 — Cache-bust on every commit.** `www/smartmorphic-loader.js` is the only `extra_module_url` entry; `scripts/stamp-version.sh` rewrites a `<sha>-<timestamp>` VERSION on every commit and stages the file. Loader dynamically imports each card with `?v=<version>`, so every commit shifts the URL and the browser cache can't lie. CLAUDE.md now requires running the stamp script before every commit that touches `www/`.
-- [ ] Phase 2 — Diagnostics card
+- [x] **Phase 2 — Diagnostics card.** `smartmorphic-diagnostics-card` reads `window.smartmorphic.{loaderVersion, versions, expectedCards, loaderFailures, loadedAt}` and shows loader version, per-card version, and registration health on the dashboard. Each card publishes its version into the shared namespace. Refreshes every 2s.
 - [ ] Phase 3 — MutationObserver-based registry recovery
 - [ ] Phase 4 — Stub-path audit
 - [ ] Phase 5 — Mobile refresh button

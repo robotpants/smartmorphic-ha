@@ -406,6 +406,10 @@ window.customCards.push({
   preview: false,
 });
 
+window.smartmorphic = window.smartmorphic || {};
+window.smartmorphic.versions = window.smartmorphic.versions || {};
+window.smartmorphic.versions["smartmorphic-tile-card"] = "0.1.0";
+
 console.info(
   "%c SMARTMORPHIC-TILE-CARD %c v0.1.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
