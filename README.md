@@ -37,10 +37,9 @@ copies (see *Troubleshooting*).
 cd /config
 git clone https://github.com/robotpants/smartmorphic-ha
 ln -sf /config/smartmorphic-ha/themes/smartmorphic.yaml /config/themes/smartmorphic.yaml
-ln -sf /config/smartmorphic-ha/www/smartmorphic-fonts.js /config/www/smartmorphic-fonts.js
-ln -sf /config/smartmorphic-ha/www/smartmorphic-room-card.js /config/www/smartmorphic-room-card.js
-ln -sf /config/smartmorphic-ha/www/smartmorphic-light-card.js /config/www/smartmorphic-light-card.js
-ln -sf /config/smartmorphic-ha/www/smartmorphic-status-pill.js /config/www/smartmorphic-status-pill.js
+for f in /config/smartmorphic-ha/www/*.js; do
+  ln -sf "$f" "/config/www/$(basename "$f")"
+done
 ```
 
 Add to `configuration.yaml`:
@@ -49,11 +48,12 @@ Add to `configuration.yaml`:
 frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
-    - /local/smartmorphic-fonts.js
-    - /local/smartmorphic-room-card.js
-    - /local/smartmorphic-light-card.js
-    - /local/smartmorphic-status-pill.js
+    - /local/smartmorphic-loader.js
 ```
+
+The loader handles every card and font. It carries a per-commit version
+stamp, so each `git pull` guarantees fresh bytes — no more browser-cache
+ghosts of old code. See `HARDENING.md` for the design.
 
 Restart Home Assistant (Developer Tools → YAML → Restart, or full reboot).
 
@@ -107,15 +107,14 @@ The repo bundles variable-font TTFs for DM Sans and JetBrains Mono in
 serves them from `/local/fonts/` instead of the Google CDN. Use it when
 you want to avoid third-party requests or run HA offline.
 
-Swap the symlinks:
+Symlink the font directory:
 
 ```bash
 ln -sf /config/smartmorphic-ha/www/fonts /config/www/fonts
-ln -sfn /config/smartmorphic-ha/www/smartmorphic-fonts-local.js /config/www/smartmorphic-fonts.js
 ```
 
-The `configuration.yaml` `extra_module_url` entry stays the same. Restart
-HA after the swap.
+Then edit `www/smartmorphic-loader.js` and swap `"smartmorphic-fonts"`
+for `"smartmorphic-fonts-local"` in the `FILES` array. Restart HA.
 
 Outfit (display font) isn't bundled. If you use it, either stick with the
 Google CDN loader or add Outfit TTFs to `www/fonts/` and extend the
@@ -128,19 +127,28 @@ smartmorphic-ha/
 ├── CLAUDE.md
 ├── README.md
 ├── TODO.md
+├── HARDENING.md
 ├── themes/
 │   └── smartmorphic.yaml
 ├── www/
+│   ├── smartmorphic-loader.js        ← single extra_module_url entry
 │   ├── smartmorphic-fonts.js
 │   ├── smartmorphic-fonts-local.js
 │   ├── smartmorphic-room-card.js
 │   ├── smartmorphic-light-card.js
+│   ├── smartmorphic-tile-card.js
+│   ├── smartmorphic-sensor-tile.js
+│   ├── smartmorphic-climate-tile.js
+│   ├── smartmorphic-automation-row.js
+│   ├── smartmorphic-scene-chip.js
 │   ├── smartmorphic-status-pill.js
 │   └── fonts/
 │       ├── DMSans-VariableFont_opsz_wght.ttf
 │       ├── DMSans-Italic-VariableFont_opsz_wght.ttf
 │       ├── JetBrainsMono-VariableFont_wght.ttf
 │       └── JetBrainsMono-Italic-VariableFont_wght.ttf
+├── scripts/
+│   └── stamp-version.sh              ← run before each commit
 └── dashboards/
     └── smartmorphic-starter.yaml
 ```

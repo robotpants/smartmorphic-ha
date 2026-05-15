@@ -2,6 +2,14 @@
 
 - Commit directly to `main`. Do not create feature branches or pull requests.
 - Push straight to `origin main` after each commit.
+- After every commit, give the user the pull command for their Pi:
+  `cd /config/smartmorphic-ha && git pull`
+- **Run `bash scripts/stamp-version.sh` before every commit that touches `www/`.**
+  The script rewrites `VERSION` in `smartmorphic-loader.js` to a fresh
+  `<sha>-<utc-timestamp>` value and stages the file, so every commit
+  shifts the loader URL and the browser can't serve stale bytes.
+  Without this stamp, HA frontend caching defeats the whole loader design.
+  See `HARDENING.md` Phase 1 for context.
 
 ## What this repo is
 

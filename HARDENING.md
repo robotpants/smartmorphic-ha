@@ -2,6 +2,14 @@
 
 Before any new cards or style work lands, the loading pipeline gets bulletproofed. The pattern — `git pull` → refresh → spinners or stale description — happens on every iteration and burns time.
 
+## Status
+
+- [x] **Phase 1 — Cache-bust on every commit.** `www/smartmorphic-loader.js` is the only `extra_module_url` entry; `scripts/stamp-version.sh` rewrites a `<sha>-<timestamp>` VERSION on every commit and stages the file. Loader dynamically imports each card with `?v=<version>`, so every commit shifts the URL and the browser cache can't lie. CLAUDE.md now requires running the stamp script before every commit that touches `www/`.
+- [ ] Phase 2 — Diagnostics card
+- [ ] Phase 3 — MutationObserver-based registry recovery
+- [ ] Phase 4 — Stub-path audit
+- [ ] Phase 5 — Mobile refresh button
+
 ## Recurring failure modes
 
 1. **Stale JS from browser cache.** HA's `extra_module_url` files are immutable URLs. Bumping the `console.info` banner doesn't change the URL, so the browser keeps serving cached bytes. iOS Safari and the HA Companion webview are the worst.
