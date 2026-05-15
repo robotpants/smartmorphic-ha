@@ -211,8 +211,9 @@ class SmartmorphicClimateTile extends HTMLElement {
 
       .ring {
         position: relative;
-        width: 64px;
-        height: 64px;
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
       }
       .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
       .ring .track {
@@ -235,29 +236,33 @@ class SmartmorphicClimateTile extends HTMLElement {
         place-items: center;
         font-family: var(--smartmorphic-font-display, 'Outfit', system-ui, sans-serif);
         font-weight: 500;
-        font-size: 20px;
+        font-size: 18px;
         letter-spacing: -0.3px;
         color: var(--primary-text-color);
       }
       .ring .center sup {
-        font-size: 38%;
+        font-size: 42%;
         vertical-align: top;
         line-height: 1;
         margin-left: 1px;
+        color: var(--secondary-text-color);
       }
 
       .modes {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        display: flex;
         gap: 6px;
+        flex-wrap: wrap;
       }
       .mode {
+        flex: 1 1 0;
+        min-width: 0;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        gap: 3px;
-        padding: 6px 0;
-        border-radius: 8px;
+        justify-content: center;
+        gap: 4px;
+        padding: 6px 8px;
+        border-radius: 999px;
         background: var(--smartmorphic-surface, var(--ha-card-background));
         box-shadow: var(--smartmorphic-neu-raised-sm,
           2px 2px 4px rgba(0,0,0,0.18),
@@ -290,11 +295,23 @@ class SmartmorphicClimateTile extends HTMLElement {
         font-size: 11px;
         color: var(--secondary-text-color);
       }
+      .meta .humidity {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .meta .humidity ha-icon {
+        --mdc-icon-size: 14px;
+        color: var(--smartmorphic-info, #5aa9e6);
+      }
       .meta .delta {
         font-family: var(--smartmorphic-font-mono, 'JetBrains Mono', monospace);
         font-size: 11px;
-        color: var(--primary-text-color);
+        font-weight: 600;
+        color: var(--secondary-text-color);
       }
+      .meta .delta.warm { color: var(--smartmorphic-warm, #e8653a); }
+      .meta .delta.cool { color: var(--smartmorphic-info, #5aa9e6); }
       .bumps {
         display: flex; gap: 6px;
       }
@@ -386,13 +403,12 @@ class SmartmorphicClimateTile extends HTMLElement {
     this.shadowRoot.querySelector(".name").textContent = this._name();
 
     const target = this._targetTemp();
-    const targetUnit = so?.attributes?.temperature_unit ?? "°";
     this.shadowRoot.querySelector(".target").textContent =
-      target != null ? `Target ${target}${targetUnit}` : "";
+      target != null ? `Target ${Math.round(target)}°` : "";
 
     const current = this._currentTemp();
     const centerEl = this.shadowRoot.querySelector(".current");
-    if (centerEl) centerEl.textContent = current != null ? String(current) : "—";
+    if (centerEl) centerEl.textContent = current != null ? String(Math.round(current)) : "—";
 
     // Ring fill
     const circumference = 2 * Math.PI * 28; // r=28
@@ -415,7 +431,7 @@ class SmartmorphicClimateTile extends HTMLElement {
     const ho = this._humidityObj();
     if (ho && ho.state !== "unavailable" && ho.state !== "unknown") {
       const u = ho.attributes?.unit_of_measurement ?? "%";
-      humEl.textContent = `Humidity ${ho.state}${u}`;
+      humEl.innerHTML = `<ha-icon icon="mdi:water-percent"></ha-icon><span>${ho.state}${u}</span>`;
     } else {
       humEl.textContent = "";
     }
@@ -426,9 +442,12 @@ class SmartmorphicClimateTile extends HTMLElement {
       if (current != null && target != null) {
         const d = Math.round((current - target) * 10) / 10;
         const sign = d > 0 ? "+" : "";
-        deltaEl.textContent = `${sign}${d}`;
+        deltaEl.textContent = `${sign}${d}°`;
+        deltaEl.classList.toggle("warm", d > 0.05);
+        deltaEl.classList.toggle("cool", d < -0.05);
       } else {
         deltaEl.textContent = "";
+        deltaEl.classList.remove("warm", "cool");
       }
     }
   }
@@ -507,7 +526,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c SMARTMORPHIC-CLIMATE-TILE %c v0.1.0 ",
+  "%c SMARTMORPHIC-CLIMATE-TILE %c v0.1.1 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
