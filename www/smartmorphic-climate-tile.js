@@ -249,20 +249,19 @@ class SmartmorphicClimateTile extends HTMLElement {
       }
 
       .modes {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         gap: 6px;
-        flex-wrap: wrap;
       }
       .mode {
-        flex: 1 1 0;
         min-width: 0;
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
         gap: 4px;
-        padding: 6px 8px;
-        border-radius: 999px;
+        padding: 6px 0;
+        border-radius: 8px;
         background: var(--smartmorphic-surface, var(--ha-card-background));
         box-shadow: var(--smartmorphic-neu-raised-sm,
           2px 2px 4px rgba(0,0,0,0.18),
@@ -527,10 +526,10 @@ window.customCards.push({
 
 window.smartmorphic = window.smartmorphic || {};
 window.smartmorphic.versions = window.smartmorphic.versions || {};
-window.smartmorphic.versions["smartmorphic-climate-tile"] = "0.1.1";
+window.smartmorphic.versions["smartmorphic-climate-tile"] = "0.2.0";
 
 console.info(
-  "%c SMARTMORPHIC-CLIMATE-TILE %c v0.1.1 ",
+  "%c SMARTMORPHIC-CLIMATE-TILE %c v0.2.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );

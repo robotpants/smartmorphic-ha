@@ -239,9 +239,11 @@ class SmartmorphicAutomationRow extends HTMLElement {
       }
       .last .eyebrow {
         font-family: var(--smartmorphic-eyebrow-font-family, 'Outfit', system-ui, sans-serif);
-        font-size: 9px; font-weight: 600;
-        letter-spacing: 1.2px; text-transform: uppercase;
-        color: var(--secondary-text-color);
+        font-size: var(--smartmorphic-eyebrow-font-size, 10px);
+        font-weight: var(--smartmorphic-eyebrow-font-weight, 600);
+        letter-spacing: var(--smartmorphic-eyebrow-letter-spacing, 1.5px);
+        text-transform: var(--smartmorphic-eyebrow-text-transform, uppercase);
+        color: var(--smartmorphic-eyebrow-color, var(--secondary-text-color));
         line-height: 1;
       }
       .last .ago {
@@ -269,28 +271,30 @@ class SmartmorphicAutomationRow extends HTMLElement {
       .run ha-icon { --mdc-icon-size: 16px; }
 
       .toggle {
-        width: 40px; height: 24px;
+        width: 44px; height: 26px;
         border-radius: 999px;
-        background: #c4c7d4;
+        background: var(--smartmorphic-toggle-off, #c4c7d4);
         position: relative;
         cursor: pointer;
-        transition: background var(--smartmorphic-transition-base, 180ms ease);
+        transition:
+          background var(--smartmorphic-transition-base, 180ms ease),
+          box-shadow var(--smartmorphic-transition-base, 180ms ease);
         flex-shrink: 0;
       }
       .toggle .knob {
         position: absolute;
         top: 2px; left: 2px;
-        width: 20px; height: 20px;
+        width: 22px; height: 22px;
         border-radius: 50%;
         background: #fff;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.20);
         transition: left var(--smartmorphic-transition-base, 180ms ease);
       }
       .row.active .toggle {
         background: var(--smartmorphic-accent, #e8653a);
         box-shadow: 0 0 10px var(--smartmorphic-accent-glow, rgba(232,101,58,0.35));
       }
-      .row.active .toggle .knob { left: 18px; }
+      .row.active .toggle .knob { left: 20px; }
     `;
 
     this.shadowRoot.innerHTML = `
@@ -418,10 +422,10 @@ window.customCards.push({
 
 window.smartmorphic = window.smartmorphic || {};
 window.smartmorphic.versions = window.smartmorphic.versions || {};
-window.smartmorphic.versions["smartmorphic-automation-row"] = "0.1.0";
+window.smartmorphic.versions["smartmorphic-automation-row"] = "0.2.0";
 
 console.info(
-  "%c SMARTMORPHIC-AUTOMATION-ROW %c v0.1.0 ",
+  "%c SMARTMORPHIC-AUTOMATION-ROW %c v0.2.0 ",
   "color: white; background: #e8653a; font-weight: 700;",
   "color: #e8653a; background: transparent;"
 );
