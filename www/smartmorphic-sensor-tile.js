@@ -94,13 +94,14 @@ class SmartmorphicSensorTile extends HTMLElement {
   }
 
   setConfig(config) {
-    if (config.entity && typeof config.entity !== "string") {
-      throw new Error("smartmorphic-sensor-tile: 'entity' must be a string");
-    }
+    const c = { ...(config || {}) };
+    // Coerce non-string entity to string (or empty) so picker previews
+    // never throw (CLAUDE.md / HARDENING.md Phase 4).
+    const entity = typeof c.entity === "string" ? c.entity : "";
     this._config = {
       show_sparkline: true,
-      ...config,
-      entity: config.entity ?? "",
+      ...c,
+      entity,
     };
     this._rendered = false;
   }

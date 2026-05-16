@@ -91,13 +91,13 @@ class SmartmorphicStatusPill extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config.variant && !config.entity) {
-      throw new Error("smartmorphic-status-pill: either 'variant' or 'entity' is required");
-    }
-    if (config.variant && !VARIANTS[config.variant]) {
-      throw new Error(`smartmorphic-status-pill: unknown variant '${config.variant}'`);
-    }
-    this._config = { ...config };
+    const c = { ...(config || {}) };
+    // Default to a neutral "ok" pill when no variant or entity is set.
+    if (!c.variant && !c.entity) c.variant = "ok";
+    // Fall back to "ok" for unknown variants (renders something usable
+    // instead of throwing and breaking the picker preview).
+    if (c.variant && !VARIANTS[c.variant]) c.variant = "ok";
+    this._config = c;
     this._rendered = false;
   }
 

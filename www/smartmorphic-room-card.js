@@ -94,10 +94,11 @@ class SmartmorphicRoomCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config.name) throw new Error("smartmorphic-room-card: 'name' is required");
     this._config = {
+      name: "Room",
+      icon: "mdi:home-outline",
       ...config,
-      entities: Array.isArray(config.entities) ? config.entities : [],
+      entities: Array.isArray(config?.entities) ? config.entities : [],
     };
     this._rendered = false;
   }

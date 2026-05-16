@@ -59,10 +59,11 @@ class SmartmorphicLightCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (config.entity && !config.entity.startsWith("light.")) {
-      throw new Error("smartmorphic-light-card: 'entity' must be a light");
-    }
-    this._config = { ...config, entity: config.entity ?? "" };
+    const c = { ...(config || {}) };
+    // Coerce non-light entities to empty so the picker preview never
+    // throws (CLAUDE.md / HARDENING.md Phase 4).
+    if (c.entity && !String(c.entity).startsWith("light.")) c.entity = "";
+    this._config = { ...c, entity: c.entity ?? "" };
     this._rendered = false;
   }
 
