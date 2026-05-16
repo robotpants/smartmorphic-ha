@@ -11,6 +11,14 @@
   Without this stamp, HA frontend caching defeats the whole loader design.
   See `HARDENING.md` Phase 1 for context.
 
+## Communication
+
+- **Always label where a command runs.** When giving the user any command,
+  start the snippet with a clear context tag — "**In Termius (SSH):**" for
+  shell commands on the Pi, "**In the browser console:**" for JS to paste
+  into devtools, "**In the HA UI:**" for service calls / clicks. Bare code
+  blocks without context cost time and cause wrong-place pastes.
+
 ## What this repo is
 
 Smartmorphic design system applied to Home Assistant. Three deliverables:
