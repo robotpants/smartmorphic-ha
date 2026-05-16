@@ -27,7 +27,7 @@ Smartmorphic design system applied to Home Assistant. Three deliverables:
 2. `www/smartmorphic-fonts.js` — runtime font loader (DM Sans / Outfit / JetBrains Mono via Google Fonts), referenced by HA's `extra_module_url`.
 3. `dashboards/smartmorphic-starter.yaml` — template Lovelace dashboard showcasing the theme via Mushroom cards.
 
-User runs HA OS on a Raspberry Pi. The repo is cloned to `/config/smartmorphic-ha` and the two assets are symlinked into `/config/themes/` and `/config/www/` so `git pull` is the only update step.
+User runs HA OS on a Raspberry Pi. The repo is cloned to `/config/smartmorphic-ha`. The theme YAML and the fonts directory are symlinked into `/config/themes/` and `/config/www/fonts/`. **Card JS files are NOT symlinked** — HA OS's `/local/` mount does not reliably serve symlinks for resources created after its initial scan, so `scripts/sync-www.sh` copies `www/*.js` into `/config/www/` as plain files. The bundled `.githooks/post-merge` hook (enabled per-clone via `git config core.hooksPath .githooks`) re-runs the sync after every `git pull`, so the user's update step stays a single `git pull` command.
 
 ## Phase 2 plan
 

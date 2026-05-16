@@ -29,17 +29,19 @@ the starter dashboard is built on.
 
 ## Install
 
-Clone into your HA config dir. HA OS's `/local` mount has been flaky with
-symlinks for some users — if symlinks 404 in the browser, swap to plain
-copies (see *Troubleshooting*).
+HA OS does not reliably serve symlinks under `/local/` for resources
+created after its initial scan, so card JS lives as plain file copies in
+`/config/www/`. `scripts/sync-www.sh` does the copy and the bundled
+`post-merge` git hook re-runs it after every `git pull`.
 
 ```bash
 cd /config
 git clone https://github.com/robotpants/smartmorphic-ha
 ln -sf /config/smartmorphic-ha/themes/smartmorphic.yaml /config/themes/smartmorphic.yaml
-for f in /config/smartmorphic-ha/www/*.js; do
-  ln -sf "$f" "/config/www/$(basename "$f")"
-done
+ln -sf /config/smartmorphic-ha/www/fonts /config/www/fonts
+cd /config/smartmorphic-ha
+git config core.hooksPath .githooks   # auto-sync on every git pull
+bash scripts/sync-www.sh              # initial copy
 ```
 
 Add to `configuration.yaml`:
@@ -51,9 +53,11 @@ frontend:
     - /local/smartmorphic-loader.js
 ```
 
-The loader handles every card and font. It carries a per-commit version
-stamp, so each `git pull` guarantees fresh bytes — no more browser-cache
-ghosts of old code. See `HARDENING.md` for the design.
+The loader is the single entry point. It dynamically imports every card
+with a `?v=<sha>-<timestamp>` query string baked in by
+`scripts/stamp-version.sh` on every commit, so each `git pull` guarantees
+fresh bytes — no more browser-cache ghosts of old code. See `HARDENING.md`
+for the design.
 
 Restart Home Assistant (Developer Tools → YAML → Restart, or full reboot).
 
@@ -148,7 +152,10 @@ smartmorphic-ha/
 │       ├── JetBrainsMono-VariableFont_wght.ttf
 │       └── JetBrainsMono-Italic-VariableFont_wght.ttf
 ├── scripts/
-│   └── stamp-version.sh              ← run before each commit
+│   ├── stamp-version.sh              ← run before each commit
+│   └── sync-www.sh                   ← copy www/*.js into /config/www/
+├── .githooks/
+│   └── post-merge                    ← auto-runs sync-www.sh after git pull
 └── dashboards/
     └── smartmorphic-starter.yaml
 ```

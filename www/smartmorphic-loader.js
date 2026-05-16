@@ -20,7 +20,7 @@
 // script rewrites that line on every commit.
 // =============================================================================
 
-const VERSION = "55d9c59-20260515222507";
+const VERSION = "f15d8d7-20260516011523";
 
 const FILES = [
   "smartmorphic-fonts",

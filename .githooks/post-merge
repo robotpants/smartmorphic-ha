@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# post-merge — runs after `git pull` (or any merge) finishes.
+#
+# Re-syncs www/*.js into /config/www/ so HA picks up the new versions
+# automatically. Without this hook, every pull needs a manual
+# `bash scripts/sync-www.sh`.
+#
+# To enable per-clone: git config core.hooksPath .githooks
+# =============================================================================
+
+ROOT="$(git rev-parse --show-toplevel)"
+SYNC="$ROOT/scripts/sync-www.sh"
+
+if [ -x "$SYNC" ]; then
+  bash "$SYNC" || echo "[post-merge] sync-www failed (continuing)"
+fi
